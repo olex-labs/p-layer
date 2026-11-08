@@ -38,4 +38,26 @@
     <string name="cd_pause">Pausa</string>
     <string name="cd_next">Successivo</string>
     <string name="cd_more">Altre azioni</string>
+
+    <string name="tab_tracks">Brani</string>
+    <string name="tab_albums">Album</string>
+    <string name="tab_artists">Artisti</string>
+    <string name="tab_folders">Cartelle</string>
+    <string name="shuffle">Casuale</string>
+    <string name="play_all">Riproduci</string>
+    <string name="sort_title">Titolo</string>
+    <string name="sort_artist">Artista</string>
+    <string name="sort_album">Album</string>
+    <string name="sort_date_added">Data di aggiunta</string>
+    <string name="sort_duration">Durata</string>
+    <string name="cd_sort">Ordina</string>
+    <string name="cd_back">Indietro</string>
+    <string name="selected_count">%1$d selezionati</string>
+    <string name="empty_library_title">Nessun brano trovato</string>
+    <string name="empty_library_body">Aggiungi musica al telefono oppure controlla le cartelle escluse e la durata minima nelle impostazioni.</string>
+    <string name="open_settings_button">Apri impostazioni</string>
+    <string name="albums_count">%1$d album</string>
+    <string name="tracks_count">%1$d brani</string>
+    <string name="folder_empty">Cartella vuota</string>
+    <string name="not_found">Elemento non trovato</string>
 </resources>

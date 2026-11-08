@@ -40,6 +40,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import app.brano.ui.AppViewModel
+import app.brano.ui.library.AlbumScreen
+import app.brano.ui.library.ArtistScreen
+import app.brano.ui.library.FolderScreen
+import app.brano.ui.library.LibraryScreen
 import app.brano.ui.onboarding.PermissionScreen
 import app.brano.ui.player.MiniPlayer
 
@@ -118,16 +122,48 @@ private fun BranoShell(viewModel: AppViewModel) {
             startDestination = Destinations.LIBRARY,
             modifier = Modifier.padding(padding),
         ) {
-            placeholder(Destinations.LIBRARY, R.string.tab_library)
+            val toAlbum: (Long) -> Unit = { navController.navigate(Destinations.album(it)) }
+            val toArtist: (Long) -> Unit = { navController.navigate(Destinations.artist(it)) }
+            val toFolder: (String) -> Unit = { navController.navigate(Destinations.folder(it)) }
+            composable(Destinations.LIBRARY) {
+                LibraryScreen(
+                    onOpenAlbum = toAlbum,
+                    onOpenArtist = toArtist,
+                    onOpenFolder = toFolder,
+                    onOpenSettings = { navController.navigate(Destinations.SETTINGS) { launchSingleTop = true } },
+                )
+            }
             placeholder(Destinations.SEARCH, R.string.tab_search)
             placeholder(Destinations.PLAYLISTS, R.string.tab_playlists)
             placeholder(Destinations.SETTINGS, R.string.tab_settings)
-            placeholder(Destinations.ALBUM, R.string.tab_library, navArgument("id") { type = NavType.LongType })
-            placeholder(Destinations.ARTIST, R.string.tab_library, navArgument("id") { type = NavType.LongType })
-            placeholder(
-                Destinations.FOLDER, R.string.tab_library,
-                navArgument("path") { type = NavType.StringType; nullable = true; defaultValue = null },
-            )
+            composable(Destinations.ALBUM, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
+                AlbumScreen(
+                    albumId = it.arguments!!.getLong("id"),
+                    onBack = { navController.popBackStack() },
+                    onOpenAlbum = toAlbum,
+                    onOpenArtist = toArtist,
+                )
+            }
+            composable(Destinations.ARTIST, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
+                ArtistScreen(
+                    artistId = it.arguments!!.getLong("id"),
+                    onBack = { navController.popBackStack() },
+                    onOpenAlbum = toAlbum,
+                    onOpenArtist = toArtist,
+                )
+            }
+            composable(
+                Destinations.FOLDER,
+                arguments = listOf(navArgument("path") { type = NavType.StringType; nullable = true; defaultValue = null }),
+            ) {
+                FolderScreen(
+                    path = it.arguments?.getString("path"),
+                    onBack = { navController.popBackStack() },
+                    onOpenFolder = toFolder,
+                    onOpenAlbum = toAlbum,
+                    onOpenArtist = toArtist,
+                )
+            }
             placeholder(Destinations.PLAYLIST, R.string.tab_playlists, navArgument("id") { type = NavType.LongType })
             placeholder(Destinations.SMART, R.string.tab_playlists, navArgument("kind") { type = NavType.StringType })
             placeholder(Destinations.PLAYER, R.string.player_title)

@@ -1,6 +1,7 @@
 package app.brano.ui.icons
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 /** The only place icons are referenced; screens use these names. */
 object AppIcons {
+    val Back: ImageVector = Icons.AutoMirrored.Rounded.ArrowBack
     val Play: ImageVector = Icons.Rounded.PlayArrow
     val Pause: ImageVector = Icons.Rounded.Pause
     val SkipNext: ImageVector = Icons.Rounded.SkipNext
