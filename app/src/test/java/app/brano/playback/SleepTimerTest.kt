@@ -118,9 +118,15 @@ class SleepTimerTest {
     }
 
     @Test fun throwingOnExpire_stillRestoresVolume_andStateOff() = runTest {
-        val t = SleepTimer(backgroundScope, { volumes += it }, { error("boom") })
-        t.startEndOfTrack()
-        runCatching { t.onTrackEnded() }
+        val t = SleepTimer(
+            CoroutineScope(SupervisorJob() + StandardTestDispatcher(testScheduler) + CoroutineExceptionHandler { _, _ -> }),
+            { volumes += it },
+            { error("boom") },
+        )
+        t.start(11_000)
+        advanceTimeBy(11_100)
+        runCurrent()
+        assertThat(volumes.any { it < 1f }).isTrue()
         assertThat(volumes.last()).isEqualTo(1f)
         assertThat(t.state.value).isEqualTo(SleepTimerState.Off)
     }
