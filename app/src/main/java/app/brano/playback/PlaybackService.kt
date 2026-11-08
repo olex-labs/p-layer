@@ -9,6 +9,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -55,8 +56,8 @@ class PlaybackService : MediaSessionService() {
     private lateinit var sleepTimer: SleepTimer
     private lateinit var playCountTracker: PlayCountTracker
 
-    /** False until the saved queue is restored (or skipped); prevents saving an empty queue over it. */
-    private var restoreDone = false
+    /** True once the player held items in this instance; until then an empty queue is never saved. */
+    private var hadItems = false
 
     override fun onCreate() {
         super.onCreate()
@@ -111,24 +112,20 @@ class PlaybackService : MediaSessionService() {
     }
 
     private suspend fun restoreQueue() {
-        try {
-            val saved = queueStateStore.load() ?: return
-            withTimeoutOrNull(RESTORE_TIMEOUT_MS) { libraryRepository.tracks.first { it.isNotEmpty() } }
-                ?: return
-            if (player.mediaItemCount > 0) return // a controller already started something
-            val restored = saved.restore(libraryRepository::trackById) ?: return
-            player.shuffleModeEnabled = saved.shuffle
-            player.repeatMode = saved.repeatMode
-            player.setMediaItems(
-                restored.tracks.map(MediaItemMapper::toMediaItem),
-                restored.index,
-                restored.positionMs,
-            )
-            player.playWhenReady = false
-            player.prepare()
-        } finally {
-            restoreDone = true
-        }
+        val saved = queueStateStore.load() ?: return
+        withTimeoutOrNull(RESTORE_TIMEOUT_MS) { libraryRepository.tracks.first { it.isNotEmpty() } }
+            ?: return
+        if (player.mediaItemCount > 0) return // a controller already started something
+        val restored = saved.restore(libraryRepository::trackById) ?: return
+        player.shuffleModeEnabled = saved.shuffle
+        player.repeatMode = saved.repeatMode
+        player.setMediaItems(
+            restored.tracks.map(MediaItemMapper::toMediaItem),
+            restored.index,
+            restored.positionMs,
+        )
+        player.playWhenReady = false
+        player.prepare()
     }
 
     private suspend fun progressLoop() {
@@ -147,7 +144,7 @@ class PlaybackService : MediaSessionService() {
 
     /** Snapshots the queue on the main thread, then writes it off the main thread in call order. */
     private fun saveState() {
-        if (!restoreDone && player.mediaItemCount == 0) return
+        if (!PlaybackPolicy.shouldSaveQueue(player.mediaItemCount, hadItems)) return
         val state = QueueState(
             ids = List(player.mediaItemCount) { MediaItemMapper.idOf(player.getMediaItemAt(it)) },
             index = player.currentMediaItemIndex,
@@ -188,13 +185,26 @@ class PlaybackService : MediaSessionService() {
             if (!isPlaying) saveState()
         }
 
+        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+            if (!timeline.isEmpty) hadItems = true
+        }
+
         override fun onPlayerError(error: PlaybackException) {
             Log.w(TAG, "Playback error, skipping item", error)
+            val resume = player.playWhenReady
             val index = player.currentMediaItemIndex
-            if (index in 0 until player.mediaItemCount) player.removeMediaItem(index)
-            if (player.mediaItemCount > 0) {
-                player.prepare()
-                player.play()
+            if (index !in 0 until player.mediaItemCount) return
+            player.removeMediaItem(index)
+            when (PlaybackPolicy.afterErrorRemoval(index, player.mediaItemCount, resume)) {
+                PlaybackPolicy.ErrorRecovery.STOP -> player.playWhenReady = false
+                PlaybackPolicy.ErrorRecovery.PREPARE_PAUSED -> {
+                    player.playWhenReady = false
+                    player.prepare()
+                }
+                PlaybackPolicy.ErrorRecovery.PREPARE_AND_PLAY -> {
+                    player.prepare()
+                    player.play()
+                }
             }
         }
     }
@@ -289,4 +299,23 @@ class PlaybackService : MediaSessionService() {
                 else -> SleepTimerState.Off
             }
     }
+}
+
+/** Pure decisions of [PlaybackService], kept separate so they can be unit-tested. */
+internal object PlaybackPolicy {
+    enum class ErrorRecovery { STOP, PREPARE_PAUSED, PREPARE_AND_PLAY }
+
+    /** An empty queue is only persisted once this service instance actually held items. */
+    fun shouldSaveQueue(itemCount: Int, hadItems: Boolean): Boolean = itemCount > 0 || hadItems
+
+    /**
+     * After the failing item at [removedIndex] was removed, leaving [remaining] items: continue
+     * only if a next item exists, and only start playing if playback was already wanted.
+     */
+    fun afterErrorRemoval(removedIndex: Int, remaining: Int, wasPlayWhenReady: Boolean): ErrorRecovery =
+        when {
+            removedIndex >= remaining -> ErrorRecovery.STOP
+            wasPlayWhenReady -> ErrorRecovery.PREPARE_AND_PLAY
+            else -> ErrorRecovery.PREPARE_PAUSED
+        }
 }
