@@ -94,4 +94,41 @@ class LibraryRepositoryTest {
         assertThat(repo.folders.value).isNotNull()
         assertThat(repo.search.value.query("hello").tracks).hasSize(1)
     }
+
+    @Test fun repository_staleSnapshotNeverOverwritesFresh() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val file = tmp.newFile("slow.json")
+        val slowStore = object : LibrarySnapshotStore(file, Dispatchers.Unconfined) {
+            override suspend fun load(): List<Track>? {
+                gate.await()
+                return listOf(t(1, title = "Old"))
+            }
+        }
+        val repo = repo(FakeSource(listOf(t(2, title = "New"))), slowStore)
+        assertThat(repo.tracks.value.map { it.title }).containsExactly("New")
+        gate.complete(Unit)
+        assertThat(repo.tracks.value.map { it.title }).containsExactly("New")
+    }
+
+    @Test fun repository_survivesLoadFailureAndRecovers() = runTest {
+        var fail = false
+        val source = object : TrackSource {
+            val changes = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
+            override suspend fun loadAll(): List<Track> {
+                if (fail) throw SecurityException("no permission")
+                return listOf(t(1))
+            }
+            override fun changes(): Flow<Unit> = changes
+        }
+        val repo = repo(source, store())
+        assertThat(repo.tracks.value.map { it.id }).containsExactly(1L)
+        fail = true
+        source.changes.emit(Unit)
+        assertThat(repo.tracks.value.map { it.id }).containsExactly(1L)
+        assertThat(repo.isLoading.value).isFalse()
+        fail = false
+        source.changes.emit(Unit)
+        assertThat(repo.tracks.value.map { it.id }).containsExactly(1L)
+        repo.refresh()
+    }
 }

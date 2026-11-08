@@ -8,14 +8,14 @@ import kotlinx.serialization.json.Json
 import java.io.File
 
 /** Persists the last known library as JSON so the UI has content before MediaStore answers. */
-class LibrarySnapshotStore(
+open class LibrarySnapshotStore(
     private val file: File,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
     private val serializer = ListSerializer(Track.serializer())
 
-    suspend fun load(): List<Track>? = withContext(io) {
+    open suspend fun load(): List<Track>? = withContext(io) {
         runCatching {
             if (file.exists()) json.decodeFromString(serializer, file.readText()) else null
         }.getOrNull()

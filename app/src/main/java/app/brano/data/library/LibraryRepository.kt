@@ -1,6 +1,7 @@
 package app.brano.data.library
 
 import app.brano.domain.SearchIndex
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -51,7 +52,9 @@ class LibraryRepository(
     init {
         scope.launch {
             // Snapshot first, but never overwrite data already published by a faster refresh.
-            snapshotStore.load()?.let { snapshot -> if (!freshPublished) publish(snapshot) }
+            snapshotStore.load()?.let { snapshot ->
+                mutex.withLock { if (!freshPublished) publish(snapshot) }
+            }
         }
         scope.launch {
             combine(excludedFolders, minDurationMs) { e, m -> Settings(e, m) }
@@ -77,6 +80,10 @@ class LibraryRepository(
                 freshPublished = true
                 publish(filtered)
                 snapshotStore.save(filtered)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Keep previous data; a later change or settings emission retries.
             } finally {
                 _isLoading.value = false
             }
