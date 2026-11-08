@@ -60,4 +60,7 @@
     <string name="tracks_count">%1$d brani</string>
     <string name="folder_empty">Cartella vuota</string>
     <string name="not_found">Elemento non trovato</string>
+    <string name="search_hint">Cerca brani, album, artisti</string>
+    <string name="search_no_results">Nessun risultato</string>
+    <string name="cd_clear_search">Cancella ricerca</string>
 </resources>

@@ -46,6 +46,7 @@ import app.brano.ui.library.FolderScreen
 import app.brano.ui.library.LibraryScreen
 import app.brano.ui.onboarding.PermissionScreen
 import app.brano.ui.player.MiniPlayer
+import app.brano.ui.search.SearchScreen
 
 private val audioPermission =
     if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE
@@ -133,7 +134,7 @@ private fun BranoShell(viewModel: AppViewModel) {
                     onOpenSettings = { navController.navigate(Destinations.SETTINGS) { launchSingleTop = true } },
                 )
             }
-            placeholder(Destinations.SEARCH, R.string.tab_search)
+            composable(Destinations.SEARCH) { SearchScreen(onOpenAlbum = toAlbum, onOpenArtist = toArtist) }
             placeholder(Destinations.PLAYLISTS, R.string.tab_playlists)
             placeholder(Destinations.SETTINGS, R.string.tab_settings)
             composable(Destinations.ALBUM, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
