@@ -28,4 +28,10 @@ class M3uParserTest {
         assertThat(e.map { it.durationSec }).containsExactly(null, null)
         assertThat(e.map { it.title }).containsExactly("T", "U").inOrder()
     }
+
+    @Test fun parse_titleKeepsCommas() =
+        assertThat(M3uParser.parse("#EXTINF:10,Foo, Bar - Baz\na.mp3").single().title).isEqualTo("Foo, Bar - Baz")
+
+    @Test fun parse_invalidPercentEscapeLeftUndecoded() =
+        assertThat(M3uParser.parse("file:///a%zz.mp3").single().path).isEqualTo("/a%zz.mp3")
 }
