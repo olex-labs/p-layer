@@ -40,7 +40,15 @@ class PlayerViewModel internal constructor(
         seeds: ArtworkSeedLoader,
     ) : this(controller, favorites, playlists, seeds, System::currentTimeMillis)
 
+    /** Everything except the position, so the 500 ms position ticks do not recompose the screen. */
     val state: StateFlow<PlayerUiState> = controller.state
+        .map { it.copy(positionMs = 0) }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PlayerUiState())
+
+    val position: StateFlow<Long> = controller.state
+        .map { it.positionMs }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0L)
 
     val errors: SharedFlow<String> = controller.errors
 

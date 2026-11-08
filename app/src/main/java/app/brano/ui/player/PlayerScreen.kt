@@ -47,6 +47,7 @@ fun PlayerScreen(
     viewModel: PlayerViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val position = viewModel.position.collectAsStateWithLifecycle()
     val favorite by viewModel.isFavorite.collectAsStateWithLifecycle()
     var queueOpen by rememberSaveable { mutableStateOf(false) }
     var sleepOpen by rememberSaveable { mutableStateOf(false) }
@@ -126,7 +127,7 @@ fun PlayerScreen(
         }
 
         SeekBar(
-            positionMs = state.positionMs,
+            position = { position.value },
             durationMs = state.durationMs,
             onSeek = viewModel::seekTo,
         )
@@ -236,10 +237,10 @@ private fun SwipeableArtwork(
 
 /** Follows the player position; while dragging it shows the local value and seeks once on release. */
 @Composable
-private fun SeekBar(positionMs: Long, durationMs: Long, onSeek: (Long) -> Unit) {
+private fun SeekBar(position: () -> Long, durationMs: Long, onSeek: (Long) -> Unit) {
     var dragValue by remember { mutableStateOf<Float?>(null) }
     val enabled = durationMs > 0
-    val value = (dragValue ?: positionMs.toFloat()).coerceIn(0f, if (enabled) durationMs.toFloat() else 1f)
+    val value = (dragValue ?: position().toFloat()).coerceIn(0f, if (enabled) durationMs.toFloat() else 1f)
     val description = stringResource(R.string.cd_seekbar)
     Column(Modifier.fillMaxWidth()) {
         Slider(

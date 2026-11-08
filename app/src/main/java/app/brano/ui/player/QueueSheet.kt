@@ -70,7 +70,7 @@ fun QueueSheet(
     var dragging by remember { mutableStateOf(false) }
     var dragStartIndex by remember { mutableStateOf(-1) }
     var currentKey by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(queue) { if (!dragging) rows = toRows(queue) }
+    LaunchedEffect(queue, dragging) { if (!dragging) rows = toRows(queue) }
     // The highlight follows the entry itself while it is being dragged.
     LaunchedEffect(rows, currentIndex, dragging) { if (!dragging) currentKey = rows.getOrNull(currentIndex)?.key }
 
