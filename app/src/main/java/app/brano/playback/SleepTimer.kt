@@ -1,5 +1,6 @@
 package app.brano.playback
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -14,6 +15,12 @@ sealed interface SleepTimerState {
     data object EndOfTrack : SleepTimerState
 }
 
+/**
+ * Sleep timer with a 10 s volume fade-out.
+ *
+ * Not thread-safe: all calls must come from a single thread, and [scope] must be confined to
+ * that thread (e.g. Dispatchers.Main.immediate).
+ */
 class SleepTimer(
     private val scope: CoroutineScope,
     private val onVolume: (Float) -> Unit,
@@ -32,16 +39,26 @@ class SleepTimer(
         }
         _state.value = SleepTimerState.Counting(durationMs)
         job = scope.launch {
-            var remaining = durationMs
-            while (true) {
-                _state.value = SleepTimerState.Counting(remaining)
-                if (remaining <= 0) break
-                if (remaining <= FADE_WINDOW_MS) {
-                    onVolume((remaining / FADE_WINDOW_MS.toFloat()).coerceIn(0f, 1f))
+            try {
+                var remaining = durationMs
+                while (true) {
+                    _state.value = SleepTimerState.Counting(remaining)
+                    if (remaining <= 0) break
+                    if (remaining <= FADE_WINDOW_MS) {
+                        onVolume((remaining / FADE_WINDOW_MS.toFloat()).coerceIn(0f, 1f))
+                    }
+                    val step = minOf(TICK_MS, remaining)
+                    delay(step)
+                    remaining -= step
                 }
-                val step = minOf(TICK_MS, remaining)
-                delay(step)
-                remaining -= step
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                // Callback failed mid-countdown: never leave a stuck Counting state or a faded volume.
+                job = null
+                _state.value = SleepTimerState.Off
+                runCatching { onVolume(1f) }
+                throw e
             }
             expire()
         }
@@ -71,8 +88,11 @@ class SleepTimer(
     private fun expire() {
         job = null
         _state.value = SleepTimerState.Off
-        onExpire()
-        onVolume(1f)
+        try {
+            onExpire()
+        } finally {
+            onVolume(1f)
+        }
     }
 
     private companion object {

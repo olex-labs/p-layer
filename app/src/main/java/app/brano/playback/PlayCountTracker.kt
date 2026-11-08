@@ -1,6 +1,10 @@
 package app.brano.playback
 
-/** Counts a play once per playback, at 50% of the duration or 240 s, whichever comes first. */
+/**
+ * Counts a play once per playback, at 50% of the duration or 240 s, whichever comes first.
+ *
+ * Not thread-safe: use from a single thread only.
+ */
 class PlayCountTracker(private val onCounted: (Long) -> Unit) {
     private var currentId: Long? = null
     private var counted = false

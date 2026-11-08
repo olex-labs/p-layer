@@ -1,7 +1,11 @@
 package app.brano.playback
 
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -111,5 +115,28 @@ class SleepTimerTest {
         assertThat(expired).isEqualTo(1)
         assertThat(volumes.last()).isEqualTo(1f)
         assertThat(t.state.value).isEqualTo(SleepTimerState.Off)
+    }
+
+    @Test fun throwingOnExpire_stillRestoresVolume_andStateOff() = runTest {
+        val t = SleepTimer(backgroundScope, { volumes += it }, { error("boom") })
+        t.startEndOfTrack()
+        runCatching { t.onTrackEnded() }
+        assertThat(volumes.last()).isEqualTo(1f)
+        assertThat(t.state.value).isEqualTo(SleepTimerState.Off)
+    }
+
+    @Test fun throwingOnVolumeInLoop_endsOff() = runTest {
+        var calls = 0
+        val t = SleepTimer(
+            CoroutineScope(SupervisorJob() + StandardTestDispatcher(testScheduler) + CoroutineExceptionHandler { _, _ -> }),
+            { calls++; if (calls == 2) error("boom") else volumes += it },
+            { expired++ },
+        )
+        t.start(30_000) // call 1: onVolume(1f) at start
+        advanceTimeBy(21_000) // fade window reached -> call 2 throws
+        runCurrent()
+        assertThat(t.state.value).isEqualTo(SleepTimerState.Off)
+        assertThat(expired).isEqualTo(0)
+        assertThat(volumes.last()).isEqualTo(1f)
     }
 }
