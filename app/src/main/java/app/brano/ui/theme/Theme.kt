@@ -1,6 +1,8 @@
 package app.brano.ui.theme
 
 import android.os.Build
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +36,7 @@ fun BranoTheme(settings: AppSettings, seedColor: Color?, content: @Composable ()
     if (settings.amoled && dark) {
         scheme = scheme.copy(background = Color.Black, surface = Color.Black)
     }
-    MaterialTheme(colorScheme = scheme, content = content)
+    MaterialTheme(colorScheme = animated(scheme), content = content)
 }
 
 private fun tone(hue: Float, saturation: Float, lightness: Float): Color =
@@ -90,4 +92,22 @@ internal fun seedColorScheme(seed: Color, dark: Boolean): ColorScheme {
             onSurfaceVariant = tone(hue, neutral * 1.5f, 0.30f),
         )
     }
+}
+
+/** Animates every role over ~600 ms so mini-player and player change color together. */
+@Composable
+private fun animated(s: ColorScheme): ColorScheme {
+    val spec = tween<Color>(durationMillis = 600)
+    @Composable fun a(c: Color) = animateColorAsState(c, spec, label = "scheme").value
+    return s.copy(
+        primary = a(s.primary), onPrimary = a(s.onPrimary),
+        primaryContainer = a(s.primaryContainer), onPrimaryContainer = a(s.onPrimaryContainer),
+        secondary = a(s.secondary), onSecondary = a(s.onSecondary),
+        secondaryContainer = a(s.secondaryContainer), onSecondaryContainer = a(s.onSecondaryContainer),
+        tertiary = a(s.tertiary), onTertiary = a(s.onTertiary),
+        tertiaryContainer = a(s.tertiaryContainer), onTertiaryContainer = a(s.onTertiaryContainer),
+        background = a(s.background), onBackground = a(s.onBackground),
+        surface = a(s.surface), onSurface = a(s.onSurface),
+        surfaceVariant = a(s.surfaceVariant), onSurfaceVariant = a(s.onSurfaceVariant),
+    )
 }

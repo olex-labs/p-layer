@@ -87,4 +87,28 @@
     <string name="export_failed">Esportazione non riuscita</string>
     <string name="playlist_empty">Nessun brano</string>
     <string name="cd_drag">Trascina per riordinare</string>
+
+    <string name="cd_previous">Precedente</string>
+    <string name="cd_close_player">Chiudi il player</string>
+    <string name="cd_favorite_add">Aggiungi ai preferiti</string>
+    <string name="cd_favorite_remove">Rimuovi dai preferiti</string>
+    <string name="cd_seekbar">Posizione di riproduzione</string>
+    <string name="cd_shuffle">Riproduzione casuale</string>
+    <string name="cd_repeat_off">Ripeti: no</string>
+    <string name="cd_repeat_all">Ripeti: tutti</string>
+    <string name="cd_repeat_one">Ripeti: brano</string>
+    <string name="cd_queue">Coda</string>
+    <string name="cd_sleep_timer">Timer di spegnimento</string>
+    <string name="sleep_end_of_track_short">Fine brano</string>
+    <string name="queue_title">In coda</string>
+    <string name="queue_empty">La coda è vuota</string>
+    <string name="save_queue_as_playlist">Salva come playlist</string>
+    <string name="sleep_title">Timer di spegnimento</string>
+    <string name="sleep_minutes_option">%1$d minuti</string>
+    <string name="sleep_custom">Personalizzato</string>
+    <string name="sleep_custom_minutes">Minuti (1-600)</string>
+    <string name="sleep_custom_invalid">Inserisci un numero da 1 a 600</string>
+    <string name="sleep_end_of_track">A fine brano</string>
+    <string name="sleep_cancel">Annulla timer</string>
+    <string name="sleep_start">Avvia</string>
 </resources>

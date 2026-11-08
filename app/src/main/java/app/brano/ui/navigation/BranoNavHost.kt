@@ -48,6 +48,9 @@ import app.brano.ui.playlists.PlaylistsScreen
 import app.brano.ui.library.LibraryScreen
 import app.brano.ui.onboarding.PermissionScreen
 import app.brano.ui.player.MiniPlayer
+import app.brano.ui.player.PlayerScreen
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import app.brano.ui.search.SearchScreen
 
 private val audioPermission =
@@ -81,6 +84,8 @@ private fun BranoShell(viewModel: AppViewModel) {
     var notificationsAsked by rememberSaveable { mutableStateOf(false) }
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     val context = LocalContext.current
+    val snackbar = remember { SnackbarHostState() }
+    LaunchedEffect(viewModel) { viewModel.errors.collect { snackbar.showSnackbar(it) } }
     LaunchedEffect(player.isPlaying) {
         if (player.isPlaying && !notificationsAsked && Build.VERSION.SDK_INT >= 33) {
             notificationsAsked = true
@@ -91,6 +96,7 @@ private fun BranoShell(viewModel: AppViewModel) {
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
             if (!onPlayer) {
                 Column {
@@ -178,7 +184,7 @@ private fun BranoShell(viewModel: AppViewModel) {
             composable(Destinations.SMART, arguments = listOf(navArgument("kind") { type = NavType.StringType })) {
                 PlaylistDetailScreen(onBack = { navController.popBackStack() }, onOpenAlbum = toAlbum, onOpenArtist = toArtist)
             }
-            placeholder(Destinations.PLAYER, R.string.player_title)
+            composable(Destinations.PLAYER) { PlayerScreen(onBack = { navController.popBackStack() }) }
         }
     }
 }
