@@ -43,6 +43,8 @@ import app.brano.ui.AppViewModel
 import app.brano.ui.library.AlbumScreen
 import app.brano.ui.library.ArtistScreen
 import app.brano.ui.library.FolderScreen
+import app.brano.ui.playlists.PlaylistDetailScreen
+import app.brano.ui.playlists.PlaylistsScreen
 import app.brano.ui.library.LibraryScreen
 import app.brano.ui.onboarding.PermissionScreen
 import app.brano.ui.player.MiniPlayer
@@ -135,7 +137,12 @@ private fun BranoShell(viewModel: AppViewModel) {
                 )
             }
             composable(Destinations.SEARCH) { SearchScreen(onOpenAlbum = toAlbum, onOpenArtist = toArtist) }
-            placeholder(Destinations.PLAYLISTS, R.string.tab_playlists)
+            composable(Destinations.PLAYLISTS) {
+                PlaylistsScreen(
+                    onOpenPlaylist = { navController.navigate(Destinations.playlist(it)) },
+                    onOpenSmart = { navController.navigate(Destinations.smart(it)) },
+                )
+            }
             placeholder(Destinations.SETTINGS, R.string.tab_settings)
             composable(Destinations.ALBUM, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
                 AlbumScreen(
@@ -165,8 +172,12 @@ private fun BranoShell(viewModel: AppViewModel) {
                     onOpenArtist = toArtist,
                 )
             }
-            placeholder(Destinations.PLAYLIST, R.string.tab_playlists, navArgument("id") { type = NavType.LongType })
-            placeholder(Destinations.SMART, R.string.tab_playlists, navArgument("kind") { type = NavType.StringType })
+            composable(Destinations.PLAYLIST, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
+                PlaylistDetailScreen(onBack = { navController.popBackStack() }, onOpenAlbum = toAlbum, onOpenArtist = toArtist)
+            }
+            composable(Destinations.SMART, arguments = listOf(navArgument("kind") { type = NavType.StringType })) {
+                PlaylistDetailScreen(onBack = { navController.popBackStack() }, onOpenAlbum = toAlbum, onOpenArtist = toArtist)
+            }
             placeholder(Destinations.PLAYER, R.string.player_title)
         }
     }
