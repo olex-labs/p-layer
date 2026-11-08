@@ -13,9 +13,14 @@ import app.brano.domain.Normalizer
 import app.brano.playback.PlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -30,26 +35,36 @@ fun sortTracks(tracks: List<Track>, sort: TrackSort): List<Track> = when (sort) 
 }
 
 private fun byText(tracks: List<Track>, text: (Track) -> String?): List<Track> =
-    tracks.map { it to text(it)?.let(Normalizer::normalize) }
+    tracks.map { Triple(it, text(it)?.let(Normalizer::normalize), Normalizer.normalize(it.title)) }
         .sortedWith(
-            compareBy<Pair<Track, String?>> { it.second == null }
+            compareBy<Triple<Track, String?, String>> { it.second == null }
                 .thenBy { it.second.orEmpty() }
-                .thenBy { Normalizer.normalize(it.first.title) },
+                .thenBy { it.third },
         )
         .map { it.first }
 
 @HiltViewModel
-class LibraryViewModel @Inject constructor(
+class LibraryViewModel internal constructor(
     library: LibraryRepository,
     private val settingsRepository: SettingsRepository,
     private val player: PlayerController,
+    sortDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
-    val sort: StateFlow<TrackSort> = settingsRepository.settings
-        .map { it.trackSort }
+    @Inject
+    constructor(
+        library: LibraryRepository,
+        settingsRepository: SettingsRepository,
+        player: PlayerController,
+    ) : this(library, settingsRepository, player, Dispatchers.Default)
+
+    private val sortSetting: Flow<TrackSort> = settingsRepository.settings.map { it.trackSort }.distinctUntilChanged()
+
+    val sort: StateFlow<TrackSort> = sortSetting
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TrackSort.TITLE)
 
-    val tracks: StateFlow<List<Track>> = combine(library.tracks, sort, ::sortTracks)
+    val tracks: StateFlow<List<Track>> = combine(library.tracks, sortSetting, ::sortTracks)
+        .flowOn(sortDispatcher)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val albums: StateFlow<List<Album>> = library.albums

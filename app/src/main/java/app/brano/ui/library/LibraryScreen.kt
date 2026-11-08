@@ -193,7 +193,6 @@ fun FolderScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val root by viewModel.folders.collectAsStateWithLifecycle()
-    val allTracks by viewModel.tracks.collectAsStateWithLifecycle()
     val currentId by viewModel.currentId.collectAsStateWithLifecycle()
     val selection = rememberSelectionState()
     val node = root?.let { r -> if (path == null) r else r.find(path) }
@@ -201,7 +200,7 @@ fun FolderScreen(
         title = node?.name?.ifEmpty { null } ?: stringResource(R.string.tab_folders),
         onBack = onBack,
         selection = selection,
-        allTracks = allTracks,
+        allTracks = node?.tracks.orEmpty(),
         onOpenAlbum = onOpenAlbum,
         onOpenArtist = onOpenArtist,
     ) { onMore ->

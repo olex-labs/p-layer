@@ -15,7 +15,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -73,7 +75,7 @@ class LibraryViewModelTest {
     }
 
     @Test fun setSort_persistsAndReordersTracks() = runTest(UnconfinedTestDispatcher()) {
-        val vm = LibraryViewModel(repo, settingsRepo, player)
+        val vm = LibraryViewModel(repo, settingsRepo, player, UnconfinedTestDispatcher(testScheduler))
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.tracks.collect {} }
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.sort.collect {} }
         vm.setSort(TrackSort.DURATION)
@@ -83,11 +85,19 @@ class LibraryViewModelTest {
     }
 
     @Test fun playAll_playsSortedListFromIndex_andShuffleAllShuffles() = runTest(UnconfinedTestDispatcher()) {
-        val vm = LibraryViewModel(repo, settingsRepo, player)
+        val vm = LibraryViewModel(repo, settingsRepo, player, UnconfinedTestDispatcher(testScheduler))
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.tracks.collect {} }
         vm.playAll(1)
         verify { player.play(match { ids(it) == listOf(2L, 1L, 3L) }, 1, false) }
         vm.shuffleAll()
         verify { player.play(match { ids(it) == listOf(2L, 1L, 3L) }, 0, true) }
+    }
+
+    @Test fun tracks_areSortedOnTheInjectedDispatcher() = runTest {
+        val vm = LibraryViewModel(repo, settingsRepo, player, StandardTestDispatcher(testScheduler))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.tracks.collect {} }
+        assertThat(vm.tracks.value).isEmpty()
+        advanceUntilIdle()
+        assertThat(ids(vm.tracks.value)).containsExactly(2L, 1L, 3L).inOrder()
     }
 }
