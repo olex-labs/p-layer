@@ -2,4 +2,40 @@
 <resources>
     <string name="app_name">Brano</string>
     <string name="playback_error">Impossibile riprodurre: %1$s</string>
+
+    <string name="tab_library">Libreria</string>
+    <string name="tab_search">Cerca</string>
+    <string name="tab_playlists">Playlist</string>
+    <string name="tab_settings">Impostazioni</string>
+    <string name="player_title">In riproduzione</string>
+
+    <string name="unknown_artist">Artista sconosciuto</string>
+    <string name="unknown_album">Album sconosciuto</string>
+
+    <string name="permission_title">Accesso alla musica</string>
+    <string name="permission_rationale">Brano ha bisogno di accedere ai file audio del dispositivo per mostrare e riprodurre la tua musica. Nessun dato lascia il telefono.</string>
+    <string name="permission_grant">Concedi accesso</string>
+    <string name="permission_denied">Senza il permesso non posso leggere la tua libreria musicale.</string>
+    <string name="permission_denied_permanent">Il permesso è stato negato. Puoi concederlo dalle impostazioni dell\'app.</string>
+    <string name="open_settings">Apri impostazioni</string>
+
+    <string name="action_play_next">Riproduci dopo</string>
+    <string name="action_add_to_queue">Aggiungi in coda</string>
+    <string name="action_add_to_playlist">Aggiungi a playlist</string>
+    <string name="action_go_to_album">Vai all\'album</string>
+    <string name="action_go_to_artist">Vai all\'artista</string>
+    <string name="action_file_info">Info file</string>
+    <string name="new_playlist">Nuova playlist</string>
+    <string name="playlist_name">Nome playlist</string>
+    <string name="create">Crea</string>
+    <string name="cancel">Annulla</string>
+    <string name="close">Chiudi</string>
+    <string name="info_path">Percorso</string>
+    <string name="info_duration">Durata</string>
+    <string name="info_format">Formato</string>
+
+    <string name="cd_play">Riproduci</string>
+    <string name="cd_pause">Pausa</string>
+    <string name="cd_next">Successivo</string>
+    <string name="cd_more">Altre azioni</string>
 </resources>
