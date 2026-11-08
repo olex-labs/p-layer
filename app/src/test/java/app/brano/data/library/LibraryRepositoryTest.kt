@@ -112,11 +112,12 @@ class LibraryRepositoryTest {
 
     @Test fun repository_survivesLoadFailureAndRecovers() = runTest {
         var fail = false
+        var recovered = false
         val source = object : TrackSource {
             val changes = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
             override suspend fun loadAll(): List<Track> {
                 if (fail) throw SecurityException("no permission")
-                return listOf(t(1))
+                return listOf(t(if (recovered) 2 else 1))
             }
             override fun changes(): Flow<Unit> = changes
         }
@@ -127,8 +128,8 @@ class LibraryRepositoryTest {
         assertThat(repo.tracks.value.map { it.id }).containsExactly(1L)
         assertThat(repo.isLoading.value).isFalse()
         fail = false
+        recovered = true
         source.changes.emit(Unit)
-        assertThat(repo.tracks.value.map { it.id }).containsExactly(1L)
-        repo.refresh()
+        assertThat(repo.tracks.value.map { it.id }).containsExactly(2L)
     }
 }
