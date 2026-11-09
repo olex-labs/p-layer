@@ -80,8 +80,8 @@ private fun BranoShell(viewModel: AppViewModel) {
     val backStack by navController.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
     val onPlayer = route == Destinations.PLAYER
-    val entries by navController.currentBackStack.collectAsStateWithLifecycle()
-    val selectedTab = selectedTopLevelRoute(entries.map { it.destination.route })
+    var selectedTab by rememberSaveable { mutableStateOf(Destinations.LIBRARY) }
+    selectedTab = nextSelectedTab(selectedTab, route)
 
     // POST_NOTIFICATIONS is requested the first time playback actually starts.
     var notificationsAsked by rememberSaveable { mutableStateOf(false) }

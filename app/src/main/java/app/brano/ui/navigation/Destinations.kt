@@ -28,11 +28,13 @@ object Destinations {
 }
 
 /**
- * The tab to highlight for a back stack (routes bottom to top): the last top-level route in it, so
- * detail screens (album, artist, folder, playlist, smart) keep the tab they were opened from.
+ * The tab to highlight once [route] is shown: a top-level route selects itself; detail screens
+ * (album, artist, folder, playlist, smart, player) keep [selected], the tab they were opened from.
+ * Since every tab switch pops back to the start destination, this is the last top-level route in
+ * the back stack (NavController.currentBackStack itself is a restricted API).
  */
-fun selectedTopLevelRoute(backStackRoutes: List<String?>): String? =
-    backStackRoutes.lastOrNull { it in Destinations.topLevelRoutes }
+fun nextSelectedTab(selected: String, route: String?): String =
+    if (route != null && route in Destinations.topLevelRoutes) route else selected
 
 data class TopLevelDestination(val route: String, @param:StringRes val label: Int, val icon: ImageVector)
 

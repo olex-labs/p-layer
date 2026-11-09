@@ -320,6 +320,7 @@ class PlayerController @Inject constructor(
 
     private val controllerListener = object : MediaController.Listener {
         /** The service reports failing items explicitly (see [PlaybackService.ACTION_PLAYBACK_ERROR]). */
+        @OptIn(UnstableApi::class)
         override fun onCustomCommand(
             controller: MediaController,
             command: SessionCommand,
