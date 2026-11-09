@@ -1,6 +1,11 @@
 package app.brano.ui.player
 
 import androidx.compose.foundation.clickable
+import app.brano.ui.theme.PillShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,6 +44,7 @@ fun MiniPlayer(
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 6.dp)
             .pointerInput(Unit) {
                 var drag = 0f
                 detectVerticalDragGestures(
@@ -48,8 +54,8 @@ fun MiniPlayer(
                 )
             }
             .clickable(onClick = onOpen),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        tonalElevation = 2.dp,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = RoundedCornerShape(28.dp),
     ) {
         Column {
             Row(
@@ -57,13 +63,13 @@ fun MiniPlayer(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Artwork(track.albumId, Modifier.size(44.dp))
+                Artwork(track.albumId, Modifier.size(40.dp), shape = CircleShape)
                 Column(Modifier.weight(1f)) {
                     Text(track.title, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
                         track.artist ?: stringResource(R.string.unknown_artist),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -79,7 +85,12 @@ fun MiniPlayer(
                 }
             }
             val progress = if (state.durationMs > 0) (state.positionMs.toFloat() / state.durationMs).coerceIn(0f, 1f) else 0f
-            LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 6.dp).height(3.dp).clip(PillShape),
+                drawStopIndicator = {},
+                gapSize = 0.dp,
+            )
         }
     }
 }

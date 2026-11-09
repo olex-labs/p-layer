@@ -20,6 +20,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             prefs[DYNAMIC] = new.dynamicColor
             prefs[MIN_DURATION] = new.minDurationMs
             prefs[SORT] = new.trackSort.name
+            prefs[SPIN_DISC] = new.spinDisc
         }
     }
 
@@ -31,6 +32,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             dynamicColor = this[DYNAMIC] ?: d.dynamicColor,
             minDurationMs = this[MIN_DURATION] ?: d.minDurationMs,
             trackSort = enumOrDefault(this[SORT], d.trackSort),
+            spinDisc = this[SPIN_DISC] ?: d.spinDisc,
         )
     }
 
@@ -43,5 +45,6 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val DYNAMIC = booleanPreferencesKey("dynamic_color")
         val MIN_DURATION = longPreferencesKey("min_duration_ms")
         val SORT = stringPreferencesKey("track_sort")
+        val SPIN_DISC = booleanPreferencesKey("spin_disc")
     }
 }

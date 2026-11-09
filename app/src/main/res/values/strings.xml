@@ -119,6 +119,8 @@
     <string name="settings_amoled">Nero AMOLED</string>
     <string name="settings_amoled_hint">Solo con tema scuro</string>
     <string name="settings_dynamic">Colori dalla copertina</string>
+    <string name="settings_spin_disc">Disco che gira</string>
+    <string name="settings_spin_disc_hint">La copertina nel player ruota durante la riproduzione</string>
     <string name="settings_min_duration">Durata minima: %1$d s</string>
     <string name="settings_excluded">Cartelle escluse</string>
     <string name="settings_excluded_empty">Nessuna cartella esclusa</string>

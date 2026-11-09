@@ -58,3 +58,9 @@ Release: `proguard-rules.pro` contiene le regole ufficiali di kotlinx.serializat
 
 Bluetooth/auto, aspetto lockscreen, chiamata reale, fluidita' di scorrimento, gapless all'ascolto, tempo di avvio a freddo (< 1 s con cache) con
 `adb shell am start -W -n app.brano/.MainActivity`.
+
+## Redesign v1.1
+
+- Avvio a freddo (emulatore, release, 9 prove): mediana v1.1 487 ms, v1 615 ms nelle stesse condizioni: nessuna regressione.
+- Scorrimento: frame lenti identici tra v1 e v1.1 sull'emulatore (dipendono dall'emulatore); da verificare dall'utente su telefono.
+- Disco che gira: fermo in pausa e con l'opzione spenta; da verificare dall'utente su telefono.

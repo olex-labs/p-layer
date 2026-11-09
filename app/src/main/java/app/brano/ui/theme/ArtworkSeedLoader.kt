@@ -24,6 +24,9 @@ class ArtworkSeedLoader @Inject constructor(
 
     private class Optional(val color: Color?)
 
+    /** The seed if it was already extracted, without loading anything; null when unknown or absent. */
+    fun cachedSeed(albumId: Long): Color? = cache[albumId]?.color
+
     suspend fun seedFor(albumId: Long): Color? {
         cache[albumId]?.let { return it.color }
         val color = withContext(Dispatchers.Default) {

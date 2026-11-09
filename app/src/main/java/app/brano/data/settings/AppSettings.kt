@@ -10,4 +10,5 @@ data class AppSettings(
     val dynamicColor: Boolean = true,
     val minDurationMs: Long = 30_000,
     val trackSort: TrackSort = TrackSort.TITLE,
+    val spinDisc: Boolean = true,
 )
