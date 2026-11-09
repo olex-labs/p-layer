@@ -59,6 +59,9 @@ class PlaybackService : MediaSessionService() {
     /** True once the player held items in this instance; until then an empty queue is never saved. */
     private var hadItems = false
 
+    /** Player errors since something last played or the user last picked a track. */
+    private var consecutiveErrors = 0
+
     override fun onCreate() {
         super.onCreate()
         player = ExoPlayer.Builder(this)
@@ -174,6 +177,7 @@ class PlaybackService : MediaSessionService() {
             ) {
                 sleepTimer.onTrackEnded()
             }
+            if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) consecutiveErrors = 0 // the user picked a track
             mediaItem?.let { playCountTracker.onTrackStarted(MediaItemMapper.idOf(it)) }
         }
 
@@ -182,7 +186,7 @@ class PlaybackService : MediaSessionService() {
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (!isPlaying) saveState()
+            if (isPlaying) consecutiveErrors = 0 else saveState()
         }
 
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
@@ -190,18 +194,31 @@ class PlaybackService : MediaSessionService() {
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            Log.w(TAG, "Playback error, skipping item", error)
+            Log.w(TAG, "Playback error ${error.errorCodeName}", error)
+            consecutiveErrors++
             val resume = player.playWhenReady
             val index = player.currentMediaItemIndex
-            if (index !in 0 until player.mediaItemCount) return
-            player.removeMediaItem(index)
-            when (PlaybackPolicy.afterErrorRemoval(index, player.mediaItemCount, resume)) {
-                PlaybackPolicy.ErrorRecovery.STOP -> player.playWhenReady = false
-                PlaybackPolicy.ErrorRecovery.PREPARE_PAUSED -> {
+            // Tell the UI explicitly: controllers never see playerError once prepare() below clears it.
+            val title = player.currentMediaItem?.mediaMetadata?.title?.toString()
+            session.broadcastCustomCommand(
+                SessionCommand(ACTION_PLAYBACK_ERROR, Bundle.EMPTY),
+                PlaybackErrors.args(title ?: error.errorCodeName),
+            )
+            val count = player.mediaItemCount
+            if (index !in 0 until count) return
+            when (PlaybackPolicy.afterError(error.errorCode, index, count, resume, consecutiveErrors)) {
+                PlaybackPolicy.ErrorRecovery.PAUSE_AND_KEEP -> player.playWhenReady = false
+                PlaybackPolicy.ErrorRecovery.REMOVE_AND_STOP -> {
+                    player.removeMediaItem(index)
+                    player.playWhenReady = false
+                }
+                PlaybackPolicy.ErrorRecovery.REMOVE_AND_PREPARE_PAUSED -> {
+                    player.removeMediaItem(index)
                     player.playWhenReady = false
                     player.prepare()
                 }
-                PlaybackPolicy.ErrorRecovery.PREPARE_AND_PLAY -> {
+                PlaybackPolicy.ErrorRecovery.REMOVE_AND_PLAY -> {
+                    player.removeMediaItem(index)
                     player.prepare()
                     player.play()
                 }
@@ -274,6 +291,9 @@ class PlaybackService : MediaSessionService() {
         const val ACTION_SLEEP_CANCEL = "app.brano.SLEEP_CANCEL"
         const val EXTRA_MS = "ms"
 
+        /** Sent by the service to its controllers when an item fails; args via [PlaybackErrors]. */
+        const val ACTION_PLAYBACK_ERROR = "app.brano.PLAYBACK_ERROR"
+
         private const val EXTRA_SLEEP_KIND = "sleep_kind"
         private const val EXTRA_SLEEP_REMAINING_MS = "sleep_remaining_ms"
         private const val KIND_COUNTING = "counting"
@@ -304,19 +324,42 @@ class PlaybackService : MediaSessionService() {
 
 /** Pure decisions of [PlaybackService], kept separate so they can be unit-tested. */
 internal object PlaybackPolicy {
-    enum class ErrorRecovery { STOP, PREPARE_PAUSED, PREPARE_AND_PLAY }
+    enum class ErrorRecovery { REMOVE_AND_PLAY, REMOVE_AND_PREPARE_PAUSED, REMOVE_AND_STOP, PAUSE_AND_KEEP }
+
+    /** After this many errors in a row without anything playing, stop skipping. */
+    const val MAX_CONSECUTIVE_ERRORS = 3
 
     /** An empty queue is only persisted once this service instance actually held items. */
     fun shouldSaveQueue(itemCount: Int, hadItems: Boolean): Boolean = itemCount > 0 || hadItems
 
+    /** IO (2xxx), parsing (3xxx) and decoding (4xxx) failures: the file itself cannot be played. */
+    fun isSourceError(errorCode: Int): Boolean = errorCode in 2000..4999
+
     /**
-     * After the failing item at [removedIndex] was removed, leaving [remaining] items: continue
-     * only if a next item exists, and only start playing if playback was already wanted.
+     * What to do when the item at [index] of [itemCount] fails with [errorCode]. Only a source error
+     * removes the item, and only while fewer than [MAX_CONSECUTIVE_ERRORS] errors happened in a row
+     * ([consecutiveErrors] includes this one); anything else pauses and keeps the queue intact.
+     * After a removal playback continues only if a next item exists and playback was already wanted.
      */
-    fun afterErrorRemoval(removedIndex: Int, remaining: Int, wasPlayWhenReady: Boolean): ErrorRecovery =
-        when {
-            removedIndex >= remaining -> ErrorRecovery.STOP
-            wasPlayWhenReady -> ErrorRecovery.PREPARE_AND_PLAY
-            else -> ErrorRecovery.PREPARE_PAUSED
-        }
+    fun afterError(
+        errorCode: Int,
+        index: Int,
+        itemCount: Int,
+        wasPlayWhenReady: Boolean,
+        consecutiveErrors: Int,
+    ): ErrorRecovery = when {
+        !isSourceError(errorCode) || consecutiveErrors >= MAX_CONSECUTIVE_ERRORS -> ErrorRecovery.PAUSE_AND_KEEP
+        index >= itemCount - 1 -> ErrorRecovery.REMOVE_AND_STOP
+        wasPlayWhenReady -> ErrorRecovery.REMOVE_AND_PLAY
+        else -> ErrorRecovery.REMOVE_AND_PREPARE_PAUSED
+    }
+}
+
+/** Arguments of the [PlaybackService.ACTION_PLAYBACK_ERROR] command the service sends to its controllers. */
+internal object PlaybackErrors {
+    private const val EXTRA_TITLE = "title"
+
+    fun args(title: String?): Bundle = Bundle().apply { putString(EXTRA_TITLE, title) }
+
+    fun titleOf(args: Bundle, fallback: String = ""): String = args.getString(EXTRA_TITLE) ?: fallback
 }

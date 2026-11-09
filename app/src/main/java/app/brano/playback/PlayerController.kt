@@ -6,16 +6,18 @@ import android.os.Bundle
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.media3.common.C
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionError
+import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
 import app.brano.R
 import app.brano.data.library.LibraryRepository
 import app.brano.data.library.Track
+import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -258,16 +260,22 @@ class PlayerController @Inject constructor(
             val c = controller ?: return
             refresh(c, rebuildQueue = events.contains(Player.EVENT_TIMELINE_CHANGED))
         }
-
-        override fun onPlayerError(error: PlaybackException) {
-            val name = _state.value.current?.title
-                ?: controller?.currentMediaItem?.mediaMetadata?.title?.toString()
-                ?: error.errorCodeName
-            _errors.tryEmit(context.getString(R.string.playback_error, name))
-        }
     }
 
     private val controllerListener = object : MediaController.Listener {
+        /** The service reports failing items explicitly (see [PlaybackService.ACTION_PLAYBACK_ERROR]). */
+        override fun onCustomCommand(
+            controller: MediaController,
+            command: SessionCommand,
+            args: Bundle,
+        ): ListenableFuture<SessionResult> {
+            if (command.customAction != PlaybackService.ACTION_PLAYBACK_ERROR) {
+                return Futures.immediateFuture(SessionResult(SessionError.ERROR_NOT_SUPPORTED))
+            }
+            _errors.tryEmit(context.getString(R.string.playback_error, PlaybackErrors.titleOf(args)))
+            return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+        }
+
         override fun onExtrasChanged(controller: MediaController, extras: Bundle) {
             _state.update { it.copy(sleep = PlaybackService.sleepStateOf(extras)) }
         }
