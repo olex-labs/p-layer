@@ -8,3 +8,6 @@ captures/
 .superpowers/
 docs/preview/*.apk
 docs/preview/ref/
+keystore.properties
+*.jks
+*.keystore

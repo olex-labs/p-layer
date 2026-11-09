@@ -1,6 +1,8 @@
 package app.brano.ui.library
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.platform.LocalDensity
+import app.brano.ui.components.BranoTopBarDefaults
 import app.brano.ui.theme.PillShape
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
@@ -74,6 +76,12 @@ internal fun SelectableScaffold(
     Column(if (onBack == null) Modifier.fillMaxSize().nestedScroll(collapse.nestedScrollConnection) else Modifier.fillMaxSize()) {
         if (selection.active) {
             SelectionTopBar(
+                // Same height as the (possibly collapsed) title bar it replaces, so the list does not jump.
+                height = if (onBack == null) {
+                    BranoTopBarDefaults.LargeExpandedHeight + with(LocalDensity.current) { collapse.state.heightOffset.toDp() }
+                } else {
+                    TopAppBarDefaults.TopAppBarExpandedHeight
+                },
                 count = selection.selected.size,
                 onClose = selection::clear,
                 onMore = {

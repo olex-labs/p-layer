@@ -41,7 +41,7 @@ fun BranoTopBar(
             title = title,
             navigationIcon = navigationIcon,
             actions = actions,
-            expandedHeight = 104.dp,
+            expandedHeight = BranoTopBarDefaults.LargeExpandedHeight,
             colors = transparent,
             scrollBehavior = scrollBehavior,
             // Static gradient: no blur, no shader.
@@ -55,4 +55,9 @@ fun BranoTopBar(
             colors = transparent,
         )
     }
+}
+
+object BranoTopBarDefaults {
+    /** Height of the big title bar when fully expanded. */
+    val LargeExpandedHeight = 104.dp
 }

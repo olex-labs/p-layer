@@ -3,6 +3,7 @@ package app.brano.playback
 import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import kotlin.random.Random
 
@@ -15,7 +16,7 @@ import kotlin.random.Random
  *
  * [onNewQueue] fires when a controller replaces the whole queue (a new list started playing).
  */
-@UnstableApi
+@OptIn(UnstableApi::class)
 internal class ShufflingPlayer(
     player: Player,
     private val random: Random = Random.Default,

@@ -39,6 +39,10 @@ import androidx.media3.common.Player
 import app.brano.R
 import app.brano.playback.SleepTimerState
 import android.app.Activity
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.ColumnScope
+import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -151,106 +155,120 @@ fun PlayerScreen(
             }
         }
 
-        // The disc takes all the free space (largest square that fits); everything else sits low.
-        Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-            SwipeableArtwork(
-                albumId = track.albumId,
-                spinning = state.isPlaying && spinDisc,
-                colors = colors,
-                onNext = viewModel::next,
-                onPrevious = viewModel::previous,
-            )
-        }
-
-        Row(Modifier.fillMaxWidth().padding(top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    track.title,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontFamily = FontFamily.Serif,
-                        fontStyle = FontStyle.Italic,
-                        fontSize = 22.sp,
-                    ),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    track.artist ?: stringResource(R.string.unknown_artist),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                track.qualityLabel?.let { QualityBadge(it, Modifier.padding(top = 6.dp)) }
-            }
-            IconButton(onClick = viewModel::toggleFavorite) {
-                Icon(
-                    if (favorite) AppIcons.Favorite else AppIcons.FavoriteBorder,
-                    contentDescription = stringResource(if (favorite) R.string.cd_favorite_remove else R.string.cd_favorite_add),
-                    tint = if (favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        // Portrait: the disc takes the free space and everything else sits low, near the thumb.
+        // Landscape: disc on the left, details and controls on the right, so the disc stays big.
+        val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val disc: @Composable (Modifier) -> Unit = { modifier ->
+            Box(modifier, contentAlignment = Alignment.Center) {
+                SwipeableArtwork(
+                    albumId = track.albumId,
+                    spinning = state.isPlaying && spinDisc,
+                    colors = colors,
+                    onNext = viewModel::next,
+                    onPrevious = viewModel::previous,
                 )
             }
         }
-
-        SeekBar(
-            position = { position.value },
-            durationMs = state.durationMs,
-            onSeek = viewModel::seekTo,
-        )
-
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = viewModel::previous, modifier = Modifier.size(56.dp)) {
-                Icon(AppIcons.SkipPrevious, contentDescription = stringResource(R.string.cd_previous), modifier = Modifier.size(36.dp))
-            }
-            FilledIconButton(
-                onClick = viewModel::togglePlayPause,
-                modifier = Modifier.size(64.dp),
-                shape = CircleShape,
-                colors = IconButtonDefaults.filledIconButtonColors(containerColor = colors.text, contentColor = colors.deep),
-            ) {
-                Icon(
-                    if (state.isPlaying) AppIcons.Pause else AppIcons.Play,
-                    contentDescription = stringResource(if (state.isPlaying) R.string.cd_pause else R.string.cd_play),
-                    modifier = Modifier.size(36.dp),
-                )
-            }
-            IconButton(onClick = viewModel::next, modifier = Modifier.size(56.dp)) {
-                Icon(AppIcons.SkipNext, contentDescription = stringResource(R.string.cd_next), modifier = Modifier.size(36.dp))
-            }
-        }
-
-        Row(
-            Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = { viewModel.setShuffle(!state.shuffle) }) {
-                Icon(
-                    if (state.shuffle) AppIcons.ShuffleOn else AppIcons.Shuffle,
-                    contentDescription = stringResource(R.string.cd_shuffle),
-                    tint = if (state.shuffle) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            IconButton(onClick = viewModel::cycleRepeat) {
-                val (icon, description) = when (state.repeatMode) {
-                    Player.REPEAT_MODE_ALL -> AppIcons.RepeatOn to R.string.cd_repeat_all
-                    Player.REPEAT_MODE_ONE -> AppIcons.RepeatOne to R.string.cd_repeat_one
-                    else -> AppIcons.Repeat to R.string.cd_repeat_off
+        val details: @Composable ColumnScope.() -> Unit = {
+            Row(Modifier.fillMaxWidth().padding(top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        track.title,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontFamily = FontFamily.Serif,
+                            fontStyle = FontStyle.Italic,
+                            fontSize = 22.sp,
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        track.artist ?: stringResource(R.string.unknown_artist),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    track.qualityLabel?.let { QualityBadge(it, Modifier.padding(top = 6.dp)) }
                 }
-                Icon(
-                    icon,
-                    contentDescription = stringResource(description),
-                    tint = if (state.repeatMode == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                )
+                IconButton(onClick = viewModel::toggleFavorite) {
+                    Icon(
+                        if (favorite) AppIcons.Favorite else AppIcons.FavoriteBorder,
+                        contentDescription = stringResource(if (favorite) R.string.cd_favorite_remove else R.string.cd_favorite_add),
+                        tint = if (favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-            SleepTimerButton(state.sleep) { sleepOpen = true }
-            IconButton(onClick = { queueOpen = true }) {
-                Icon(AppIcons.Queue, contentDescription = stringResource(R.string.cd_queue))
+
+            SeekBar(
+                position = { position.value },
+                durationMs = state.durationMs,
+                onSeek = viewModel::seekTo,
+            )
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = viewModel::previous, modifier = Modifier.size(56.dp)) {
+                    Icon(AppIcons.SkipPrevious, contentDescription = stringResource(R.string.cd_previous), modifier = Modifier.size(36.dp))
+                }
+                FilledIconButton(
+                    onClick = viewModel::togglePlayPause,
+                    modifier = Modifier.size(64.dp),
+                    shape = CircleShape,
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = colors.text, contentColor = colors.deep),
+                ) {
+                    Icon(
+                        if (state.isPlaying) AppIcons.Pause else AppIcons.Play,
+                        contentDescription = stringResource(if (state.isPlaying) R.string.cd_pause else R.string.cd_play),
+                        modifier = Modifier.size(36.dp),
+                    )
+                }
+                IconButton(onClick = viewModel::next, modifier = Modifier.size(56.dp)) {
+                    Icon(AppIcons.SkipNext, contentDescription = stringResource(R.string.cd_next), modifier = Modifier.size(36.dp))
+                }
             }
+
+            Row(
+                Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = { viewModel.setShuffle(!state.shuffle) }) {
+                    Icon(
+                        if (state.shuffle) AppIcons.ShuffleOn else AppIcons.Shuffle,
+                        contentDescription = stringResource(R.string.cd_shuffle),
+                        tint = if (state.shuffle) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                IconButton(onClick = viewModel::cycleRepeat) {
+                    val (icon, description) = when (state.repeatMode) {
+                        Player.REPEAT_MODE_ALL -> AppIcons.RepeatOn to R.string.cd_repeat_all
+                        Player.REPEAT_MODE_ONE -> AppIcons.RepeatOne to R.string.cd_repeat_one
+                        else -> AppIcons.Repeat to R.string.cd_repeat_off
+                    }
+                    Icon(
+                        icon,
+                        contentDescription = stringResource(description),
+                        tint = if (state.repeatMode == Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                    )
+                }
+                SleepTimerButton(state.sleep) { sleepOpen = true }
+                IconButton(onClick = { queueOpen = true }) {
+                    Icon(AppIcons.Queue, contentDescription = stringResource(R.string.cd_queue))
+                }
+            }
+        }
+        if (landscape) {
+            Row(Modifier.weight(1f).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                disc(Modifier.weight(1f).fillMaxHeight().padding(12.dp))
+                Column(Modifier.weight(1f), content = details)
+            }
+        } else {
+            disc(Modifier.weight(1f).fillMaxWidth().padding(vertical = 12.dp))
+            details()
         }
     }
     }
