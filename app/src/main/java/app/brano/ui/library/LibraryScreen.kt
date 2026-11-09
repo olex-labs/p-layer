@@ -1,6 +1,7 @@
 package app.brano.ui.library
 
 import androidx.activity.compose.BackHandler
+import app.brano.ui.components.BranoTopBar
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -72,7 +73,8 @@ internal fun SelectableScaffold(
                 },
             )
         } else {
-            TopAppBar(
+            BranoTopBar(
+                large = onBack == null,
                 title = { Text(title) },
                 navigationIcon = {
                     if (onBack != null) {

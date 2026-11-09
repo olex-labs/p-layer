@@ -1,6 +1,7 @@
 package app.brano.ui.playlists
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import app.brano.ui.components.BranoTopBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
@@ -83,7 +84,8 @@ fun PlaylistsScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
-            TopAppBar(
+            BranoTopBar(
+                large = true,
                 title = { Text(stringResource(R.string.tab_playlists)) },
                 actions = {
                     Box {

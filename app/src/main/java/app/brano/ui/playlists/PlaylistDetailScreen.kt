@@ -1,6 +1,7 @@
 package app.brano.ui.playlists
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import app.brano.ui.components.BranoTopBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -114,7 +115,8 @@ fun PlaylistDetailScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
-            TopAppBar(
+            BranoTopBar(
+                large = false,
                 title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

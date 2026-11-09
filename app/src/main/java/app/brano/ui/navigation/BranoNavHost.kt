@@ -1,6 +1,8 @@
 package app.brano.ui.navigation
 
 import android.Manifest
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.MaterialTheme
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -111,7 +113,7 @@ private fun BranoShell(viewModel: AppViewModel) {
                         onNext = viewModel::next,
                         onOpen = { navController.navigate(Destinations.PLAYER) { launchSingleTop = true } },
                     )
-                    NavigationBar {
+                    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                         topLevelDestinations.forEach { dest ->
                             NavigationBarItem(
                                 selected = dest.route == selectedTab,
@@ -127,6 +129,7 @@ private fun BranoShell(viewModel: AppViewModel) {
                                 },
                                 icon = { Icon(dest.icon, contentDescription = null) },
                                 label = { Text(stringResource(dest.label)) },
+                                colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer),
                             )
                         }
                     }

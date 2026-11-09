@@ -1,6 +1,7 @@
 package app.brano.ui.settings
 
 import androidx.annotation.StringRes
+import app.brano.ui.components.BranoTopBar
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,7 +61,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     // Local while dragging; persisted on release.
     var sliderSec by remember(settings.minDurationMs) { mutableFloatStateOf(settings.minDurationMs / 1000f) }
 
-    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }) { padding ->
+    Scaffold(topBar = { BranoTopBar(large = true, title = { Text(stringResource(R.string.settings_title)) }) }) { padding ->
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState())) {
             SectionTitle(R.string.settings_theme)
             Column(Modifier.selectableGroup()) {

@@ -1,6 +1,7 @@
 package app.brano.ui.library
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -53,9 +54,9 @@ fun AlbumScreen(
             LazyColumn(Modifier.fillMaxSize()) {
                 item(key = "header") {
                     Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Artwork(album.id, Modifier.size(120.dp))
+                        Artwork(album.id, Modifier.size(160.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(album.artist ?: stringResource(R.string.unknown_artist), style = MaterialTheme.typography.titleMedium)
+                            Text(album.artist ?: stringResource(R.string.unknown_artist), style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black))
                             Text(
                                 stringResource(R.string.tracks_count, album.trackCount) +
                                     if (album.year > 0) " · ${album.year}" else "",

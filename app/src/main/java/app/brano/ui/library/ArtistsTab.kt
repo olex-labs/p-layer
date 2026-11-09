@@ -1,6 +1,13 @@
 package app.brano.ui.library
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
@@ -28,7 +35,14 @@ fun ArtistsTab(artists: List<Artist>, onOpenArtist: (Long) -> Unit) {
                             stringResource(R.string.tracks_count, artist.tracks.size),
                     )
                 },
-                leadingContent = { Icon(AppIcons.Artist, contentDescription = null) },
+                leadingContent = {
+                    Box(
+                        Modifier.size(48.dp).background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(AppIcons.Artist, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                    }
+                },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 modifier = Modifier.clickable { onOpenArtist(artist.id) },
             )
