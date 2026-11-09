@@ -209,6 +209,7 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     private val sessionCallback = object : MediaSession.Callback {
         override fun onConnect(
             session: MediaSession,
@@ -238,7 +239,7 @@ class PlaybackService : MediaSessionService() {
                 ACTION_SLEEP_END_OF_TRACK -> sleepTimer.startEndOfTrack()
                 ACTION_SLEEP_CANCEL -> sleepTimer.cancel()
                 else -> return Futures.immediateFuture(
-                    SessionResult(SessionResult.RESULT_ERROR_NOT_SUPPORTED),
+                    SessionResult(androidx.media3.session.SessionError.ERROR_NOT_SUPPORTED),
                 )
             }
             return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))

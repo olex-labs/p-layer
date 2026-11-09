@@ -9,7 +9,7 @@ object M3uParser {
         val result = mutableListOf<M3uEntry>()
         var pendingTitle: String? = null
         var pendingDuration: Int? = null
-        for (raw in text.removePrefix("﻿").lines()) {
+        for (raw in text.removePrefix("\uFEFF").lines()) {
             val line = raw.trim()
             if (line.isEmpty()) continue
             if (line.startsWith("#")) {
