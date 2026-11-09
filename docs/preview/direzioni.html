@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brano — direzioni di stile</title>
+<style>
+:root{--bg:#f4f4f6;--fg:#16161a;--mut:#666}
+@media (prefers-color-scheme:dark){:root{--bg:#0e0e11;--fg:#eee;--mut:#999}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif;padding:24px 16px}
+h1{margin:0 0 4px}p.l{color:var(--mut);margin:0 0 24px;max-width:70ch}
+.dir{margin:0 0 40px}.dir h2{margin:0}.dir p{color:var(--mut);margin:4px 0 14px;max-width:80ch}
+.row{display:flex;gap:18px;flex-wrap:wrap}
+.ph{width:250px;height:500px;border-radius:30px;overflow:hidden;position:relative;box-shadow:0 8px 30px #0003;display:flex;flex-direction:column}
+.cv{border-radius:8px;flex:none}.t{font-weight:600}.s{font-size:12px;opacity:.7}
+.li{display:flex;gap:10px;align-items:center;padding:7px 14px}.li .cv{width:40px;height:40px}
+.bar{margin-top:auto;display:flex;justify-content:space-around;padding:10px 0 14px;font-size:11px}
+.mini{display:flex;gap:10px;align-items:center;margin:8px 10px;padding:8px;border-radius:14px}.mini .cv{width:36px;height:36px}
+.big{width:200px;height:200px;margin:30px auto 18px}.pc{padding:0 22px}.prog{height:4px;border-radius:2px;margin:16px 0 4px}
+.ctl{display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:22px}
+.play{width:58px;height:58px;display:grid;place-items:center;font-size:22px}
+.hd{padding:20px 14px 8px;font-size:26px}
+/* copertine demo */
+.c1{background:linear-gradient(135deg,#1d4ed8,#60a5fa)}.c2{background:linear-gradient(135deg,#ea580c,#fbbf24)}.c3{background:linear-gradient(135deg,#15803d,#86efac)}
+/* A — Vinile */
+.A{background:#f3ece1;color:#231f1a;font-family:Georgia,serif}.A .hd{font-style:italic;font-weight:700}
+.A .li{font-family:system-ui}.A .cv{border-radius:50%;box-shadow:0 0 0 3px #231f1a inset}.A .mini{background:#231f1a;color:#f3ece1;font-family:system-ui}
+.A .bar{border-top:1px solid #231f1a33;font-family:system-ui}
+.Ap{background:radial-gradient(120% 70% at 50% 25%,#f59e0b 0%,#7c2d12 60%,#1c120c 100%);color:#fff7ed}
+.Ap .big{border-radius:50%;box-shadow:0 0 0 10px #1c120c,0 0 0 11px #fbbf2455}.Ap .t{font-family:Georgia,serif;font-size:20px;font-style:italic}
+.Ap .prog{background:linear-gradient(90deg,#fbbf24 40%,#ffffff33 40%)}.Ap .play{background:#fff7ed;color:#7c2d12;border-radius:50%}
+/* B — Notte neon */
+.B{background:#09090d;color:#ececf1;font-family:system-ui}.B .hd{font-weight:800;letter-spacing:-1px}
+.B .li.on{background:linear-gradient(90deg,#60a5fa22,transparent);box-shadow:inset 3px 0 #60a5fa}
+.B .mini{background:#16161d;box-shadow:0 0 0 1px #60a5fa55,0 0 18px #60a5fa33}
+.B .bar{color:#888}.B .bar b{color:#60a5fa}
+.Bp{background:radial-gradient(90% 55% at 50% 30%,#2563eb88,#09090d 70%);color:#fff}
+.Bp .big{border-radius:18px;box-shadow:0 0 40px #3b82f6aa}.Bp .t{font-size:20px;font-weight:800}
+.Bp .prog{background:linear-gradient(90deg,#60a5fa 55%,#ffffff22 55%);box-shadow:0 0 8px #60a5fa}
+.Bp .play{border-radius:50%;background:#60a5fa;color:#09090d;box-shadow:0 0 22px #60a5fa}
+/* C — Espressivo (forme) */
+.C{background:#fbf7ff;color:#1d1530;font-family:system-ui}.C .hd{font-weight:900;font-size:30px}
+.C .cv{border-radius:14px 30px 14px 30px}.C .mini{background:#e7dcff;border-radius:28px}
+.C .bar b{background:#d8c8ff;padding:4px 14px;border-radius:14px}
+.Cp{background:#15803d;color:#f0fdf4}
+.Cp .big{border-radius:42% 58% 52% 48%/48% 42% 58% 52%;transform:rotate(-4deg)}.Cp .t{font-size:24px;font-weight:900;line-height:1.1}
+.Cp .prog{height:10px;border-radius:5px;background:linear-gradient(90deg,#bbf7d0 35%,#ffffff33 35%)}
+.Cp .play{width:84px;height:58px;border-radius:22px;background:#bbf7d0;color:#14532d}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:10px;background:#8882;margin-right:6px}
+</style></head><body>
+<h1>Brano — 3 direzioni di stile</h1>
+<p class="l">Mix richiesto: un'identità fissa per libreria e navigazione, e i colori dell'album che prendono il sopravvento nel player e nel mini-player. Gli effetti usati sono tutti economici in Compose: gradienti, forme e ombre semplici. Niente blur in tempo reale né video.</p>
+
+<section class="dir"><h2>A · Vinile</h2>
+<p>Caldo ed editoriale, come una rivista o un negozio di dischi: base crema e carbone, titoli serif in corsivo, copertine tonde come dischi. Nel player una luce radiale prende i colori dell'album, con il disco al centro.
+<br><span class="tag">ispirazione: Musicolet + estetica vinile</span><span class="tag">costo: molto basso</span></p>
+<div class="row">
+ <div class="ph A"><div class="hd">Libreria</div>
+  <div class="li"><div class="cv c1"></div><div><div class="t">Notte sul Navigli</div><div class="s">Lucia Ferranti · 3:41</div></div></div>
+  <div class="li"><div class="cv c2"></div><div><div class="t">Caffè a Mezzanotte</div><div class="s">Marco Vela · 4:02</div></div></div>
+  <div class="li"><div class="cv c3"></div><div><div class="t">Tram Numero Nove</div><div class="s">I Portici · 2:58</div></div></div>
+  <div class="mini" style="margin-top:auto"><div class="cv c2" style="border-radius:50%"></div><div><div class="t">Caffè a Mezzanotte</div><div class="s">Marco Vela</div></div><span style="margin-left:auto">❚❚</span></div>
+  <div class="bar"><b>Libreria</b><span>Cerca</span><span>Playlist</span><span>Impost.</span></div></div>
+ <div class="ph Ap"><div class="big c2"></div><div class="pc"><div class="t">Caffè a Mezzanotte</div><div class="s">Marco Vela — Luci d'Autunno</div>
+  <div class="prog"></div><div class="s">1:32 · 4:02</div><div class="ctl"><span>⇄</span><span>⏮</span><div class="play">❚❚</div><span>⏭</span><span>↻</span></div></div></div>
+</div></section>
+
+<section class="dir"><h2>B · Notte neon</h2>
+<p>Scuro e notturno, da cuffie di sera: sfondo quasi nero e un unico accento luminoso che cambia con l'album (aloni e linee che "brillano"). Testo deciso e sans. È il più "particolare" sugli schermi OLED e consuma poca batteria.
+<br><span class="tag">ispirazione: Poweramp, Spotify scuro</span><span class="tag">costo: basso (ombre colorate statiche)</span></p>
+<div class="row">
+ <div class="ph B"><div class="hd">Libreria</div>
+  <div class="li on"><div class="cv c1"></div><div><div class="t">Notte sul Navigli</div><div class="s">Lucia Ferranti · 3:41</div></div></div>
+  <div class="li"><div class="cv c2"></div><div><div class="t">Caffè a Mezzanotte</div><div class="s">Marco Vela · 4:02</div></div></div>
+  <div class="li"><div class="cv c3"></div><div><div class="t">Tram Numero Nove</div><div class="s">I Portici · 2:58</div></div></div>
+  <div class="mini" style="margin-top:auto"><div class="cv c1"></div><div><div class="t">Notte sul Navigli</div><div class="s">Lucia Ferranti</div></div><span style="margin-left:auto">❚❚</span></div>
+  <div class="bar"><b>Libreria</b><span>Cerca</span><span>Playlist</span><span>Impost.</span></div></div>
+ <div class="ph Bp"><div class="big c1"></div><div class="pc"><div class="t">Notte sul Navigli</div><div class="s">Lucia Ferranti — Luci d'Autunno</div>
+  <div class="prog"></div><div class="s">2:01 · 3:41</div><div class="ctl"><span>⇄</span><span>⏮</span><div class="play">❚❚</div><span>⏭</span><span>↻</span></div></div></div>
+</div></section>
+
+<section class="dir"><h2>C · Espressivo</h2>
+<p>Giocoso e moderno, nello stile Material 3 Expressive: forme morbide e asimmetriche, titoli molto grandi, pulsanti a pillola. Nel player il colore dell'album riempie tutto lo schermo e la copertina ha una forma organica.
+<br><span class="tag">ispirazione: Google/Pixel, Apple Music</span><span class="tag">costo: molto basso</span></p>
+<div class="row">
+ <div class="ph C"><div class="hd">Libreria</div>
+  <div class="li"><div class="cv c1"></div><div><div class="t">Notte sul Navigli</div><div class="s">Lucia Ferranti · 3:41</div></div></div>
+  <div class="li"><div class="cv c2"></div><div><div class="t">Caffè a Mezzanotte</div><div class="s">Marco Vela · 4:02</div></div></div>
+  <div class="li"><div class="cv c3"></div><div><div class="t">Tram Numero Nove</div><div class="s">I Portici · 2:58</div></div></div>
+  <div class="mini" style="margin-top:auto"><div class="cv c3"></div><div><div class="t">Tram Numero Nove</div><div class="s">I Portici</div></div><span style="margin-left:auto">❚❚</span></div>
+  <div class="bar"><b>Libreria</b><span>Cerca</span><span>Playlist</span><span>Impost.</span></div></div>
+ <div class="ph Cp"><div class="big c3"></div><div class="pc"><div class="t">Tram Numero Nove</div><div class="s">I Portici — Binari</div>
+  <div class="prog"></div><div class="s">1:02 · 2:58</div><div class="ctl"><span>⇄</span><span>⏮</span><div class="play">❚❚</div><span>⏭</span><span>↻</span></div></div></div>
+</div></section>
+</body></html>
