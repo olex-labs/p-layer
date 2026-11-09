@@ -6,3 +6,4 @@ local.properties
 .kotlin/
 captures/
 .superpowers/
+docs/preview/*.apk
