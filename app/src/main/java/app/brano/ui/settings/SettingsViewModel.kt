@@ -10,6 +10,7 @@ import app.brano.data.settings.SettingsRepository
 import app.brano.data.settings.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -65,7 +66,8 @@ class SettingsViewModel @Inject constructor(
     fun setTheme(m: ThemeMode) = update { it.copy(theme = m) }
     fun setAmoled(b: Boolean) = update { it.copy(amoled = b) }
     fun setDynamicColor(b: Boolean) = update { it.copy(dynamicColor = b) }
-    fun setMinDurationSec(s: Int) = update { it.copy(minDurationMs = s * 1_000L) }
+    /** [s] comes from the slider: rounded, since its steps land on values like 29.999998. */
+    fun setMinDurationSec(s: Float) = update { it.copy(minDurationMs = s.roundToInt() * 1_000L) }
 
     fun addExcluded(path: String) {
         viewModelScope.launch { excludedDao.add(path) }

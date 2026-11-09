@@ -47,6 +47,7 @@ import app.brano.BuildConfig
 import app.brano.R
 import app.brano.data.settings.ThemeMode
 import app.brano.ui.icons.AppIcons
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,11 +79,11 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             )
             HorizontalDivider()
             Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                Text(stringResource(R.string.settings_min_duration, sliderSec.toInt()), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.settings_min_duration, sliderSec.roundToInt()), style = MaterialTheme.typography.bodyLarge)
                 Slider(
                     value = sliderSec,
                     onValueChange = { sliderSec = it },
-                    onValueChangeFinished = { viewModel.setMinDurationSec(sliderSec.toInt()) },
+                    onValueChangeFinished = { viewModel.setMinDurationSec(sliderSec) },
                     valueRange = 0f..120f,
                     steps = 23,
                 )

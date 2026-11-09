@@ -49,8 +49,16 @@ class SettingsViewModelTest {
     private fun vm() = SettingsViewModel(settingsRepo, dao, library)
 
     @Test fun setMinDurationSec_storesMilliseconds() {
-        vm().setMinDurationSec(60)
+        vm().setMinDurationSec(60f)
         assertThat(settings.value.minDurationMs).isEqualTo(60_000L)
+    }
+
+    @Test fun setMinDurationSec_roundsSliderValues() {
+        // Slider steps land on floats like 29.999998f: must persist 30 s, not 29 s.
+        vm().setMinDurationSec(29.999998f)
+        assertThat(settings.value.minDurationMs).isEqualTo(30_000L)
+        vm().setMinDurationSec(35.2f)
+        assertThat(settings.value.minDurationMs).isEqualTo(35_000L)
     }
 
     @Test fun themeAmoledDynamic_persist() {
