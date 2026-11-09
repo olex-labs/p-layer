@@ -52,10 +52,11 @@ class PlayerViewModel internal constructor(
 
     val errors: SharedFlow<String> = controller.errors
 
+    /** By id, then by path (the id changes when MediaStore re-indexes the same file). */
     val isFavorite: StateFlow<Boolean> = combine(
-        controller.state.map { it.current?.id }.distinctUntilChanged(),
+        controller.state.map { it.current?.ref() }.distinctUntilChanged(),
         favorites.observe(),
-    ) { id, favs -> id != null && favs.any { it.mediaStoreId == id } }
+    ) { ref, favs -> ref != null && favs.any { it.mediaStoreId == ref.mediaStoreId || it.path == ref.path } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     val seedColor: StateFlow<Color?> = controller.state

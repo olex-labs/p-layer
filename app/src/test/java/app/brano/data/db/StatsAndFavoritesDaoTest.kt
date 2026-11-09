@@ -36,6 +36,15 @@ class StatsAndFavoritesDaoTest {
         assertThat(fav.observe().first()).isEmpty()
     }
 
+    @Test fun favorites_toggleMatchesByPathAfterAnIdChange() = runTest {
+        // MediaStore re-indexed the file: same path, new id. Un-favoriting must remove the old row.
+        val fav = db.favoritesDao()
+        assertThat(fav.toggle(a, 1)).isTrue()
+        val moved = a.copy(mediaStoreId = 99)
+        assertThat(fav.toggle(moved, 2)).isFalse()
+        assertThat(fav.observe().first()).isEmpty()
+    }
+
     @Test fun stats_incrementAccumulates() = runTest {
         val stats = db.playStatsDao()
         stats.increment(a, 10)

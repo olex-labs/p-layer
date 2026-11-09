@@ -74,6 +74,13 @@ class PlayerViewModelTest {
         assertThat(vm.isFavorite.value).isFalse()
     }
 
+    @Test fun isFavorite_matchesByPathWhenTheIdChanged() = runTest(UnconfinedTestDispatcher()) {
+        favs.value = listOf(FavoriteEntity(mediaStoreId = 77, path = queue[0].path, addedAt = 1))
+        val vm = vm()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.isFavorite.collect {} }
+        assertThat(vm.isFavorite.value).isTrue()
+    }
+
     @Test fun saveQueueAsPlaylist_createsPlaylistWithQueueInOrder() = runTest(UnconfinedTestDispatcher()) {
         coEvery { playlists.create("X") } returns 9L
         val refs = slot<List<TrackRef>>()
