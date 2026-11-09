@@ -56,6 +56,12 @@ object LibraryGrouping {
             )
         }.sortedNullLast { it.name }
 
+    /** The albums [artist] has tracks on, in the order of [albums]. */
+    fun albumsOf(artist: Artist, albums: List<Album>): List<Album> {
+        val ids = artist.tracks.mapTo(HashSet()) { it.albumId }
+        return albums.filter { it.id in ids }
+    }
+
     private class Builder(val segment: String) {
         val children = LinkedHashMap<String, Builder>()
         val tracks = ArrayList<Track>()

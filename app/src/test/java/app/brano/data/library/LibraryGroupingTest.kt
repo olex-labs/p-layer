@@ -63,4 +63,16 @@ class LibraryGroupingTest {
         assertThat(tree.children).isEmpty()
         assertThat(tree.tracks).isEmpty()
     }
+
+    @Test fun albumsOf_artist_keepsOnlyAlbumsWithTheirTracks() {
+        val tracks = listOf(
+            t(1, artistId = 1, albumId = 10, album = "B"),
+            t(2, artistId = 1, albumId = 11, album = "A"),
+            t(3, artistId = 2, albumId = 12, album = "C"),
+            t(4, artistId = 2, albumId = 10, album = "B"), // compilation shared with artist 2
+        )
+        val albums = LibraryGrouping.albums(tracks)
+        val artist = LibraryGrouping.artists(tracks).first { it.id == 1L }
+        assertThat(LibraryGrouping.albumsOf(artist, albums).map { it.id }).containsExactly(11L, 10L).inOrder()
+    }
 }

@@ -181,7 +181,19 @@ private fun BranoShell(viewModel: AppViewModel) {
             composable(Destinations.SMART, arguments = listOf(navArgument("kind") { type = NavType.StringType })) {
                 PlaylistDetailScreen(onBack = { navController.popBackStack() }, onOpenAlbum = toAlbum, onOpenArtist = toArtist)
             }
-            composable(Destinations.PLAYER) { PlayerScreen(onBack = { navController.popBackStack() }) }
+            composable(Destinations.PLAYER) {
+                PlayerScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenAlbum = {
+                        navController.popBackStack()
+                        toAlbum(it)
+                    },
+                    onOpenArtist = {
+                        navController.popBackStack()
+                        toArtist(it)
+                    },
+                )
+            }
         }
     }
 }

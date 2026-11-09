@@ -39,12 +39,15 @@ import androidx.media3.common.Player
 import app.brano.R
 import app.brano.playback.SleepTimerState
 import app.brano.ui.components.Artwork
+import app.brano.ui.components.TrackActionsSheet
 import app.brano.ui.components.formatDuration
 import app.brano.ui.icons.AppIcons
 
 @Composable
 fun PlayerScreen(
     onBack: () -> Unit,
+    onOpenAlbum: (Long) -> Unit,
+    onOpenArtist: (Long) -> Unit,
     viewModel: PlayerViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -52,6 +55,7 @@ fun PlayerScreen(
     val favorite by viewModel.isFavorite.collectAsStateWithLifecycle()
     var queueOpen by rememberSaveable { mutableStateOf(false) }
     var sleepOpen by rememberSaveable { mutableStateOf(false) }
+    var menuOpen by rememberSaveable { mutableStateOf(false) }
     val track = state.current
 
     if (track == null) {
@@ -101,6 +105,9 @@ fun PlayerScreen(
             )
             IconButton(onClick = { queueOpen = true }) {
                 Icon(AppIcons.Queue, contentDescription = stringResource(R.string.cd_queue))
+            }
+            IconButton(onClick = { menuOpen = true }) {
+                Icon(AppIcons.MoreVert, contentDescription = stringResource(R.string.cd_more))
             }
         }
 
@@ -198,6 +205,16 @@ fun PlayerScreen(
             onRemove = viewModel::removeFromQueue,
             onSaveAsPlaylist = viewModel::saveQueueAsPlaylist,
             onDismiss = { queueOpen = false },
+        )
+    }
+    if (menuOpen) {
+        // Add to playlist, go to album / artist, file info for the current track.
+        TrackActionsSheet(
+            tracks = listOf(track),
+            onDismiss = { menuOpen = false },
+            onGoToAlbum = onOpenAlbum,
+            onGoToArtist = onOpenArtist,
+            showQueueActions = false,
         )
     }
     if (sleepOpen) {

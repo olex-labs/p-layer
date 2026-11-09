@@ -59,6 +59,11 @@ fun TrackRow(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+        Text(
+            formatDuration(track.durationMs),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         IconButton(onClick = onMore) {
             Icon(AppIcons.MoreVert, contentDescription = stringResource(R.string.cd_more))
         }

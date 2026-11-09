@@ -42,6 +42,7 @@ fun TrackActionsSheet(
     onDismiss: () -> Unit,
     onGoToAlbum: (Long) -> Unit,
     onGoToArtist: (Long) -> Unit,
+    showQueueActions: Boolean = true,
     viewModel: AppViewModel = hiltViewModel(),
 ) {
     if (tracks.isEmpty()) return
@@ -53,13 +54,15 @@ fun TrackActionsSheet(
     if (!showPlaylists && !showInfo) {
         ModalBottomSheet(onDismissRequest = onDismiss) {
             Column(Modifier.navigationBarsPadding()) {
-                SheetAction(AppIcons.Queue, R.string.action_play_next) {
-                    viewModel.playNext(tracks)
-                    onDismiss()
-                }
-                SheetAction(AppIcons.Add, R.string.action_add_to_queue) {
-                    viewModel.addToQueue(tracks)
-                    onDismiss()
+                if (showQueueActions) {
+                    SheetAction(AppIcons.Queue, R.string.action_play_next) {
+                        viewModel.playNext(tracks)
+                        onDismiss()
+                    }
+                    SheetAction(AppIcons.Add, R.string.action_add_to_queue) {
+                        viewModel.addToQueue(tracks)
+                        onDismiss()
+                    }
                 }
                 SheetAction(AppIcons.PlaylistAdd, R.string.action_add_to_playlist) { showPlaylists = true }
                 if (single != null) {
