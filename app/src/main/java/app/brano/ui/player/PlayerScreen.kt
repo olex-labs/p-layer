@@ -61,6 +61,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import app.brano.ui.theme.PlayerColors
+import app.brano.data.library.qualityLabel
+import app.brano.ui.components.QualityBadge
 import app.brano.ui.theme.playerColors
 import app.brano.ui.components.TrackActionsSheet
 import app.brano.ui.components.formatDuration
@@ -179,6 +181,7 @@ fun PlayerScreen(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                track.qualityLabel?.let { QualityBadge(it, Modifier.padding(top = 6.dp)) }
             }
             IconButton(onClick = viewModel::toggleFavorite) {
                 Icon(

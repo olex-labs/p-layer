@@ -1,6 +1,8 @@
 package app.brano.ui.playlists
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import app.brano.ui.components.BranoTopBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -81,11 +83,14 @@ fun PlaylistsScreen(
         }
     }
 
+    val collapse = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
+        modifier = Modifier.nestedScroll(collapse.nestedScrollConnection),
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             BranoTopBar(
                 large = true,
+                scrollBehavior = collapse,
                 title = { Text(stringResource(R.string.tab_playlists)) },
                 actions = {
                     Box {

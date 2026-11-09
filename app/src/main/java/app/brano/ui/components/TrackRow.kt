@@ -15,6 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.brano.data.library.qualityLabel
+import app.brano.data.library.isLossless
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -38,11 +42,11 @@ fun TrackRow(
             .fillMaxWidth()
             .background(bg)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
+            .padding(start = 16.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Artwork(track.albumId, Modifier.size(48.dp))
+        Artwork(track.albumId, Modifier.size(44.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 track.title,
@@ -58,6 +62,12 @@ fun TrackRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+        }
+        // Lossless files get a small badge, like a hi-fi label; lossy ones keep the row clean.
+        if (track.isLossless) {
+            CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.primary) {
+                QualityBadge(track.qualityLabel ?: "")
+            }
         }
         Text(
             formatDuration(track.durationMs),

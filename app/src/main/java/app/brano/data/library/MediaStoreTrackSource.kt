@@ -3,6 +3,7 @@ package app.brano.data.library
 import android.content.ContentUris
 import android.content.Context
 import android.database.ContentObserver
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
@@ -37,7 +38,8 @@ class MediaStoreTrackSource @Inject constructor(
             MediaStore.Audio.Media.DATE_ADDED,
             MediaStore.Audio.Media.TRACK,
             MediaStore.Audio.Media.YEAR,
-        )
+            MediaStore.Audio.Media.MIME_TYPE,
+        ) + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) arrayOf(MediaStore.Audio.Media.BITRATE) else emptyArray()
         val result = ArrayList<Track>()
         context.contentResolver.query(
             uri, projection, "${MediaStore.Audio.Media.IS_MUSIC} != 0", null, null,
@@ -60,6 +62,9 @@ class MediaStoreTrackSource @Inject constructor(
                     trackNumber = c.getInt(9) % 1000,
                     year = c.getInt(10),
                     contentUri = ContentUris.withAppendedId(uri, id).toString(),
+                    mimeType = c.getString(11),
+                    // BITRATE is in bits per second, Android 11+ only.
+                    bitrateKbps = if (c.columnCount > 12) (c.getLong(12) / 1000).toInt() else 0,
                 )
             }
         }

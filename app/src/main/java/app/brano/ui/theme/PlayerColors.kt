@@ -13,7 +13,8 @@ fun playerColors(seed: Color?): PlayerColors {
     val hsl = FloatArray(3)
     ColorUtils.colorToHSL((seed ?: LilacSeed).toArgb(), hsl)
     val hue = hsl[0]
-    val sat = if (hsl[1] < 0.15f) 0.15f else hsl[1].coerceIn(0.35f, 0.85f)
+    // Grey covers stay grey (a tiny saturation keeps the hue from showing as pink or brown).
+    val sat = if (hsl[1] < 0.15f) 0.04f else hsl[1].coerceIn(0.35f, 0.85f)
     fun tone(lightness: Float) = Color(ColorUtils.HSLToColor(floatArrayOf(hue, sat, lightness)))
     val text = Color(0xFFFFF7ED)
     val deep = tone(0.12f)

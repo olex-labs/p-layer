@@ -42,7 +42,7 @@ class PlayerColorsTest {
     fun `grey seed gives a neutral deep`() {
         val hsl = FloatArray(3)
         ColorUtils.colorToHSL(playerColors(Color.Gray).deep.toArgb(), hsl)
-        assertThat(hsl[1]).isAtMost(0.2f)
+        assertThat(hsl[1]).isAtMost(0.06f)
     }
 
     @Test

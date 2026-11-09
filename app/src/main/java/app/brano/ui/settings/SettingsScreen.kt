@@ -1,6 +1,8 @@
 package app.brano.ui.settings
 
 import androidx.annotation.StringRes
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import app.brano.ui.components.BranoTopBar
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +63,11 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     // Local while dragging; persisted on release.
     var sliderSec by remember(settings.minDurationMs) { mutableFloatStateOf(settings.minDurationMs / 1000f) }
 
-    Scaffold(topBar = { BranoTopBar(large = true, title = { Text(stringResource(R.string.settings_title)) }) }) { padding ->
+    val collapse = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    Scaffold(
+        modifier = Modifier.nestedScroll(collapse.nestedScrollConnection),
+        topBar = { BranoTopBar(large = true, title = { Text(stringResource(R.string.settings_title)) }, scrollBehavior = collapse) },
+    ) { padding ->
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState())) {
             SectionTitle(R.string.settings_theme)
             Column(Modifier.selectableGroup()) {

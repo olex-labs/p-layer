@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
@@ -37,7 +38,8 @@ fun VinylDisc(albumId: Long, spinning: Boolean, colors: PlayerColors, modifier: 
     val animationsOn = remember {
         Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
     }
-    var angle by remember { mutableFloatStateOf(0f) }
+    // Saved, so a rotation or reopening keeps the disc where it stopped.
+    var angle by rememberSaveable { mutableFloatStateOf(0f) }
     LaunchedEffect(spinning, animationsOn) {
         if (!spinning || !animationsOn) return@LaunchedEffect
         val startAngle = angle
