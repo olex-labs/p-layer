@@ -1,6 +1,15 @@
 package app.brano.ui.settings
 
 import androidx.annotation.StringRes
+import app.brano.data.library.treeDocIdToPath
+import app.brano.data.db.HiddenTrackEntity
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
+import android.widget.Toast
+import android.provider.DocumentsContract
+import android.net.Uri
+import android.content.Intent
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import app.brano.ui.components.BranoTopBar
@@ -56,10 +65,25 @@ import kotlin.math.roundToInt
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    val excluded by viewModel.excluded.collectAsStateWithLifecycle()
-    val choices by viewModel.folderChoices.collectAsStateWithLifecycle()
+    val folders by viewModel.musicFolders.collectAsStateWithLifecycle()
+    val hidden by viewModel.hidden.collectAsStateWithLifecycle()
     val loading by viewModel.isLoading.collectAsStateWithLifecycle()
-    var choosing by rememberSaveable { mutableStateOf(false) }
+    var showHidden by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
+    val unsupported = stringResource(R.string.settings_folder_unsupported)
+    // The system folder picker: the grant it gives is kept, so Brano can later read .lrc files there.
+    val pickFolder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val path = runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()?.let(::treeDocIdToPath)
+        if (path == null) {
+            Toast.makeText(context, unsupported, Toast.LENGTH_LONG).show()
+        } else {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            viewModel.addMusicFolder(path, uri.toString())
+        }
+    }
     // Local while dragging; persisted on release.
     var sliderSec by remember(settings.minDurationMs) { mutableFloatStateOf(settings.minDurationMs / 1000f) }
 
@@ -101,24 +125,40 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 )
             }
             HorizontalDivider()
-            SectionTitle(R.string.settings_excluded)
-            if (excluded.isEmpty()) {
-                ListItem(headlineContent = { Text(stringResource(R.string.settings_excluded_empty)) })
-            }
-            excluded.sorted().forEach { path ->
+            SectionTitle(R.string.settings_music_folders)
+            Text(
+                stringResource(R.string.settings_music_folders_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+            folders.forEach { folder ->
                 ListItem(
-                    headlineContent = { Text(path, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                    headlineContent = { Text(folder.path.substringAfterLast('/'), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    supportingContent = { Text(folder.path, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                    leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
                     trailingContent = {
-                        IconButton(onClick = { viewModel.removeExcluded(path) }) {
-                            Icon(AppIcons.Close, contentDescription = stringResource(R.string.settings_remove_excluded))
+                        IconButton(onClick = {
+                            runCatching {
+                                context.contentResolver.releasePersistableUriPermission(
+                                    Uri.parse(folder.treeUri), Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                                )
+                            }
+                            viewModel.removeMusicFolder(folder.path)
+                        }) {
+                            Icon(AppIcons.Close, contentDescription = stringResource(R.string.settings_remove_music_folder))
                         }
                     },
                 )
             }
             ListItem(
-                modifier = Modifier.clickable { choosing = true },
-                headlineContent = { Text(stringResource(R.string.settings_add_excluded)) },
+                modifier = Modifier.clickable { pickFolder.launch(null) },
+                headlineContent = { Text(stringResource(R.string.settings_add_music_folder)) },
                 leadingContent = { Icon(AppIcons.Add, contentDescription = null) },
+            )
+            ListItem(
+                modifier = Modifier.clickable { showHidden = true },
+                headlineContent = { Text(stringResource(R.string.settings_hidden, hidden.size)) },
             )
             HorizontalDivider()
             ListItem(
@@ -133,34 +173,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         }
     }
 
-    if (choosing) {
-        AlertDialog(
-            onDismissRequest = { choosing = false },
-            title = { Text(stringResource(R.string.settings_choose_folder)) },
-            text = {
-                if (choices.isEmpty()) {
-                    Text(stringResource(R.string.settings_no_folders))
-                } else {
-                    LazyColumn {
-                        items(choices, key = { it.path }) { c ->
-                            Text(
-                                c.name,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        viewModel.addExcluded(c.path)
-                                        choosing = false
-                                    }
-                                    .padding(start = (c.depth * 16).dp, top = 12.dp, bottom = 12.dp),
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = { choosing = false }) { Text(stringResource(R.string.cancel)) } },
-        )
+    if (showHidden) {
+        HiddenTracksDialog(hidden, onUnhide = viewModel::unhide, onUnhideAll = viewModel::unhideAll) { showHidden = false }
     }
 }
 
@@ -187,4 +201,37 @@ private fun ThemeOption(@StringRes label: Int, selected: Boolean, onClick: () ->
         RadioButton(selected = selected, onClick = null)
         Text(stringResource(label))
     }
+}
+
+/** Hidden tracks, newest first: file name and folder, each with "Mostra"; "Mostra tutti" at the bottom. */
+@Composable
+private fun HiddenTracksDialog(
+    hidden: List<HiddenTrackEntity>,
+    onUnhide: (String) -> Unit,
+    onUnhideAll: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_hidden, hidden.size)) },
+        text = {
+            if (hidden.isEmpty()) {
+                Text(stringResource(R.string.settings_hidden_empty))
+            } else {
+                LazyColumn {
+                    items(hidden, key = { it.path }) { h ->
+                        ListItem(
+                            headlineContent = { Text(h.path.substringAfterLast('/'), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                            supportingContent = { Text(h.path.substringBeforeLast('/'), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                            trailingContent = { TextButton(onClick = { onUnhide(h.path) }) { Text(stringResource(R.string.action_unhide)) } },
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
+        dismissButton = {
+            if (hidden.isNotEmpty()) TextButton(onClick = onUnhideAll) { Text(stringResource(R.string.action_unhide_all)) }
+        },
+    )
 }

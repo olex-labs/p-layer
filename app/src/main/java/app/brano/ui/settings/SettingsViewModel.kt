@@ -2,8 +2,10 @@ package app.brano.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.brano.data.db.ExcludedFolderDao
-import app.brano.data.library.FolderNode
+import app.brano.data.db.HiddenTrackDao
+import app.brano.data.db.HiddenTrackEntity
+import app.brano.data.db.MusicFolderDao
+import app.brano.data.db.MusicFolderEntity
 import app.brano.data.library.LibraryRepository
 import app.brano.data.settings.AppSettings
 import app.brano.data.settings.SettingsRepository
@@ -13,52 +15,25 @@ import javax.inject.Inject
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
-/** A library folder the user can exclude; [depth] drives the indentation in the chooser. */
-data class FolderChoice(val path: String, val name: String, val depth: Int)
-
-/**
- * Tree order (parents before children). The library tree collapses track-less single-child chains into one
- * node, so every path segment between a node and its parent gets its own choice.
- */
-internal fun flattenFolders(root: FolderNode?, excluded: Set<String>): List<FolderChoice> {
-    if (root == null) return emptyList()
-    val out = ArrayList<FolderChoice>()
-    fun walk(n: FolderNode, parentPath: String, depth: Int) {
-        var d = depth
-        var childParent = parentPath
-        if (n.path != "/") {
-            val segs = n.path.removePrefix(parentPath).split('/').filter { it.isNotEmpty() }
-            segs.forEachIndexed { i, seg ->
-                val path = parentPath.trimEnd('/') + "/" + segs.take(i + 1).joinToString("/")
-                if (path !in excluded) out += FolderChoice(path, seg, depth + i)
-            }
-            d = depth + segs.size
-            childParent = n.path
-        }
-        n.children.forEach { walk(it, childParent, d) }
-    }
-    walk(root, "/", 0)
-    return out
-}
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
-    private val excludedDao: ExcludedFolderDao,
+    private val musicFolderDao: MusicFolderDao,
+    private val hiddenDao: HiddenTrackDao,
     private val library: LibraryRepository,
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> = settingsRepository.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
 
-    val excluded: StateFlow<Set<String>> = excludedDao.observe()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+    /** Folders the library reads from; empty means the whole phone. */
+    val musicFolders: StateFlow<List<MusicFolderEntity>> = musicFolderDao.observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val folderChoices: StateFlow<List<FolderChoice>> = combine(library.folders, excludedDao.observe(), ::flattenFolders)
+    val hidden: StateFlow<List<HiddenTrackEntity>> = hiddenDao.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val isLoading: StateFlow<Boolean> = library.isLoading
@@ -70,12 +45,21 @@ class SettingsViewModel @Inject constructor(
     /** [s] comes from the slider: rounded, since its steps land on values like 29.999998. */
     fun setMinDurationSec(s: Float) = update { it.copy(minDurationMs = s.roundToInt() * 1_000L) }
 
-    fun addExcluded(path: String) {
-        viewModelScope.launch { excludedDao.add(path) }
+    /** [path] from treeDocIdToPath; the screen already took the persistable grant on [treeUri]. */
+    fun addMusicFolder(path: String, treeUri: String) {
+        viewModelScope.launch { musicFolderDao.add(path, treeUri) }
     }
 
-    fun removeExcluded(path: String) {
-        viewModelScope.launch { excludedDao.remove(path) }
+    fun removeMusicFolder(path: String) {
+        viewModelScope.launch { musicFolderDao.remove(path) }
+    }
+
+    fun unhide(path: String) {
+        viewModelScope.launch { hiddenDao.unhide(path) }
+    }
+
+    fun unhideAll() {
+        viewModelScope.launch { hiddenDao.unhideAll() }
     }
 
     fun rescan() {

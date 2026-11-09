@@ -26,13 +26,14 @@ import kotlinx.coroutines.withContext
 class LibraryRepository(
     private val source: TrackSource,
     private val snapshotStore: LibrarySnapshotStore,
-    excludedFolders: Flow<Set<String>>,
+    musicFolders: Flow<Set<String>>,
+    hiddenPaths: Flow<Set<String>>,
     minDurationMs: Flow<Long>,
     scope: CoroutineScope,
     /** Filtering, grouping and indexing run here, never on the caller's (often Main) dispatcher. */
     private val compute: CoroutineDispatcher = Dispatchers.Default,
 ) {
-    private class Settings(val excluded: Set<String>, val minDurationMs: Long)
+    private class Settings(val folders: Set<String>, val hidden: Set<String>, val minDurationMs: Long)
     private class Lookup(val byId: Map<Long, Track>, val byPath: Map<String, Track>)
 
     private val _tracks = MutableStateFlow<List<Track>>(emptyList())
@@ -65,7 +66,7 @@ class LibraryRepository(
             }
         }
         scope.launch {
-            combine(excludedFolders, minDurationMs) { e, m -> Settings(e, m) }
+            combine(musicFolders, hiddenPaths, minDurationMs) { f, h, m -> Settings(f, h, m) }
                 .flatMapLatest { s ->
                     settings.value = s
                     source.changes().map { }.onStart { emit(Unit) }
@@ -84,7 +85,7 @@ class LibraryRepository(
             val current = settings.value ?: return@withLock
             _isLoading.value = true
             try {
-                val filtered = LibraryFilter.apply(source.loadAll(), current.minDurationMs, current.excluded)
+                val filtered = LibraryFilter.apply(source.loadAll(), current.minDurationMs, current.folders, current.hidden)
                 freshPublished = true
                 // Unchanged (e.g. the scan matches the snapshot, or a burst of MediaStore changes):
                 // nothing to regroup, re-index or rewrite.

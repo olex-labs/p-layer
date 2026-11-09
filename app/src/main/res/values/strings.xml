@@ -122,12 +122,15 @@
     <string name="settings_spin_disc">Disco che gira</string>
     <string name="settings_spin_disc_hint">La copertina nel player ruota durante la riproduzione</string>
     <string name="settings_min_duration">Durata minima: %1$d s</string>
-    <string name="settings_excluded">Cartelle escluse</string>
-    <string name="settings_excluded_empty">Nessuna cartella esclusa</string>
-    <string name="settings_add_excluded">Escludi una cartella</string>
-    <string name="settings_remove_excluded">Rimuovi esclusione</string>
-    <string name="settings_choose_folder">Scegli una cartella</string>
-    <string name="settings_no_folders">Nessuna cartella disponibile</string>
     <string name="settings_rescan">Riscansiona libreria</string>
     <string name="settings_version">Versione</string>
+    <string name="settings_music_folders">Cartelle musicali</string>
+    <string name="settings_music_folders_hint">Brano legge solo queste cartelle. Se l\'elenco è vuoto legge tutto il telefono.</string>
+    <string name="settings_add_music_folder">Aggiungi cartella</string>
+    <string name="settings_remove_music_folder">Rimuovi cartella</string>
+    <string name="settings_folder_unsupported">Questa cartella non è sul telefono o sulla scheda SD</string>
+    <string name="settings_hidden">Brani nascosti (%1$d)</string>
+    <string name="settings_hidden_empty">Nessun brano nascosto</string>
+    <string name="action_unhide">Mostra</string>
+    <string name="action_unhide_all">Mostra tutti</string>
 </resources>
