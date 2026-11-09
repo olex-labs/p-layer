@@ -52,8 +52,9 @@ fun MiniPlayer(
                     onDragEnd = { if (drag < -40f) onOpen() },
                     onVerticalDrag = { _, dy -> drag += dy },
                 )
-            }
-            .clickable(onClick = onOpen),
+            },
+        // Surface's own onClick clips the ripple to the pill shape.
+        onClick = onOpen,
         color = MaterialTheme.colorScheme.secondaryContainer,
         shape = RoundedCornerShape(28.dp),
     ) {
