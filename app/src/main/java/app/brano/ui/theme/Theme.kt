@@ -29,8 +29,10 @@ fun BranoTheme(settings: AppSettings, seedColor: Color?, content: @Composable ()
     val seed = resolveSeed(settings.dynamicColor, seedColor, Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
     var scheme: ColorScheme = when {
         seed != null -> seedColorScheme(seed, dark)
-        dark -> dynamicDarkColorScheme(context)
-        else -> dynamicLightColorScheme(context)
+        // resolveSeed returns null only when system dynamic colors exist (Android 12+).
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        else -> seedColorScheme(LilacSeed, dark)
     }
     if (settings.amoled && dark) {
         scheme = scheme.copy(background = Color.Black, surface = Color.Black)

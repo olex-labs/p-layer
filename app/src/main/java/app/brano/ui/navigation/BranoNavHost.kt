@@ -5,7 +5,9 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -135,7 +137,8 @@ private fun BranoShell(viewModel: AppViewModel) {
         NavHost(
             navController = navController,
             startDestination = Destinations.LIBRARY,
-            modifier = Modifier.padding(padding),
+            // The player draws its own background edge to edge and pads itself.
+            modifier = Modifier.padding(if (onPlayer) PaddingValues(0.dp) else padding),
         ) {
             val toAlbum: (Long) -> Unit = { navController.navigate(Destinations.album(it)) }
             val toArtist: (Long) -> Unit = { navController.navigate(Destinations.artist(it)) }

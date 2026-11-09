@@ -38,7 +38,29 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import app.brano.R
 import app.brano.playback.SleepTimerState
-import app.brano.ui.components.Artwork
+import android.app.Activity
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import app.brano.ui.theme.PlayerColors
+import app.brano.ui.theme.playerColors
 import app.brano.ui.components.TrackActionsSheet
 import app.brano.ui.components.formatDuration
 import app.brano.ui.icons.AppIcons
@@ -53,6 +75,8 @@ fun PlayerScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val position = viewModel.position.collectAsStateWithLifecycle()
     val favorite by viewModel.isFavorite.collectAsStateWithLifecycle()
+    val seed by viewModel.seedColor.collectAsStateWithLifecycle()
+    val spinDisc by viewModel.spinDisc.collectAsStateWithLifecycle()
     var queueOpen by rememberSaveable { mutableStateOf(false) }
     var sleepOpen by rememberSaveable { mutableStateOf(false) }
     var menuOpen by rememberSaveable { mutableStateOf(false) }
@@ -70,11 +94,27 @@ fun PlayerScreen(
         return
     }
 
+    val colors = animatedPlayerColors(playerColors(seed))
+    LightStatusBarIcons()
     val density = LocalDensity.current
     val closeThresholdPx = with(density) { 120.dp.toPx() }
+    PlayerContentTheme(colors) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .drawBehind {
+                drawRect(
+                    Brush.radialGradient(
+                        0f to colors.glow,
+                        0.6f to colors.deep,
+                        1f to PlayerNight,
+                        center = Offset(size.width / 2f, size.height * 0.25f),
+                        radius = size.width * 1.2f,
+                    ),
+                )
+            }
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .pointerInput(Unit) {
                 var total = 0f
                 var startedLow = false
@@ -113,6 +153,8 @@ fun PlayerScreen(
 
         SwipeableArtwork(
             albumId = track.albumId,
+            spinning = state.isPlaying && spinDisc,
+            colors = colors,
             onNext = viewModel::next,
             onPrevious = viewModel::previous,
             modifier = Modifier.padding(top = 8.dp).weight(1f, fill = false),
@@ -120,7 +162,16 @@ fun PlayerScreen(
 
         Row(Modifier.fillMaxWidth().padding(top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(track.title, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(
+                    track.title,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontFamily = FontFamily.Serif,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 22.sp,
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 Text(
                     track.artist ?: stringResource(R.string.unknown_artist),
                     style = MaterialTheme.typography.bodyLarge,
@@ -152,15 +203,16 @@ fun PlayerScreen(
             IconButton(onClick = viewModel::previous, modifier = Modifier.size(56.dp)) {
                 Icon(AppIcons.SkipPrevious, contentDescription = stringResource(R.string.cd_previous), modifier = Modifier.size(36.dp))
             }
-            IconButton(
+            FilledIconButton(
                 onClick = viewModel::togglePlayPause,
-                modifier = Modifier.size(72.dp),
+                modifier = Modifier.size(64.dp),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = colors.text, contentColor = colors.deep),
             ) {
                 Icon(
                     if (state.isPlaying) AppIcons.Pause else AppIcons.Play,
                     contentDescription = stringResource(if (state.isPlaying) R.string.cd_pause else R.string.cd_play),
-                    modifier = Modifier.size(56.dp),
-                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(36.dp),
                 )
             }
             IconButton(onClick = viewModel::next, modifier = Modifier.size(56.dp)) {
@@ -194,6 +246,7 @@ fun PlayerScreen(
             }
             SleepTimerButton(state.sleep) { sleepOpen = true }
         }
+    }
     }
 
     if (queueOpen) {
@@ -232,15 +285,18 @@ fun PlayerScreen(
 @Composable
 private fun SwipeableArtwork(
     albumId: Long,
+    spinning: Boolean,
+    colors: PlayerColors,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Artwork(
-        albumId,
-        modifier
+    VinylDisc(
+        albumId = albumId,
+        spinning = spinning,
+        colors = colors,
+        modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(1f)
             .pointerInput(Unit) {
                 var total = 0f
                 detectHorizontalDragGestures(
@@ -274,6 +330,11 @@ private fun SeekBar(position: () -> Long, durationMs: Long, onSeek: (Long) -> Un
             },
             valueRange = 0f..(if (enabled) durationMs.toFloat() else 1f),
             enabled = enabled,
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = LocalContentColor.current.copy(alpha = 0.2f),
+            ),
             modifier = Modifier.fillMaxWidth().semantics { contentDescription = description },
         )
         Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -305,6 +366,54 @@ private fun SleepTimerButton(sleep: SleepTimerState, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.tertiary,
             )
             SleepTimerState.Off -> Unit
+        }
+    }
+}
+
+/** The darkest stop of the player gradient, the same in light and dark theme. */
+private val PlayerNight = Color(0xFF0B0806)
+
+/** Each player color eases over 600 ms when the album changes, like the app theme. */
+@Composable
+private fun animatedPlayerColors(target: PlayerColors): PlayerColors {
+    val spec = tween<Color>(durationMillis = 600)
+    @Composable fun a(c: Color) = animateColorAsState(c, spec, label = "player").value
+    return PlayerColors(glow = a(target.glow), deep = a(target.deep), text = a(target.text), accent = a(target.accent))
+}
+
+/**
+ * The player content sits on its own dark gradient: text and icons use [PlayerColors.text], highlights
+ * (shuffle, repeat, timer, slider) use the accent. Sheets and dialogs opened from here keep the app theme.
+ */
+@Composable
+private fun PlayerContentTheme(colors: PlayerColors, content: @Composable () -> Unit) {
+    val scheme = MaterialTheme.colorScheme.copy(
+        primary = colors.accent,
+        onPrimary = colors.deep,
+        tertiary = colors.accent,
+        onSurface = colors.text,
+        onBackground = colors.text,
+        onSurfaceVariant = colors.text.copy(alpha = 0.7f),
+    )
+    MaterialTheme(colorScheme = scheme) {
+        CompositionLocalProvider(LocalContentColor provides colors.text, content = content)
+    }
+}
+
+/** The player is always dark: light status bar icons while it is shown, the previous look restored after. */
+@Composable
+private fun LightStatusBarIcons() {
+    val view = LocalView.current
+    if (view.isInEditMode) return
+    DisposableEffect(view) {
+        val window = (view.context as? Activity)?.window
+        if (window == null) {
+            onDispose {}
+        } else {
+            val controller = WindowCompat.getInsetsController(window, view)
+            val previous = controller.isAppearanceLightStatusBars
+            controller.isAppearanceLightStatusBars = false
+            onDispose { controller.isAppearanceLightStatusBars = previous }
         }
     }
 }
