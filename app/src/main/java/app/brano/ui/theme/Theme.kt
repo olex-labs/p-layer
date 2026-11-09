@@ -69,9 +69,10 @@ internal fun seedColorScheme(seed: Color, dark: Boolean): ColorScheme {
             onTertiary = tone(hue + 60, sat * 0.6f, 0.20f),
             tertiaryContainer = tone(hue + 60, sat * 0.6f, 0.30f),
             onTertiaryContainer = tone(hue + 60, sat * 0.6f, 0.90f),
-            background = tone(hue, neutral, 0.08f),
+            // Near black, tinted by the album like the player's night.
+            background = tone(hue, 0.22f, 0.065f),
             onBackground = tone(hue, neutral, 0.90f),
-            surface = tone(hue, neutral, 0.08f),
+            surface = tone(hue, 0.22f, 0.065f),
             onSurface = tone(hue, neutral, 0.90f),
             surfaceVariant = tone(hue, neutral * 1.5f, 0.25f),
             onSurfaceVariant = tone(hue, neutral * 1.5f, 0.78f),

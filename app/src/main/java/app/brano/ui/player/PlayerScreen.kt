@@ -144,22 +144,21 @@ fun PlayerScreen(
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
             )
-            IconButton(onClick = { queueOpen = true }) {
-                Icon(AppIcons.Queue, contentDescription = stringResource(R.string.cd_queue))
-            }
             IconButton(onClick = { menuOpen = true }) {
                 Icon(AppIcons.MoreVert, contentDescription = stringResource(R.string.cd_more))
             }
         }
 
-        SwipeableArtwork(
-            albumId = track.albumId,
-            spinning = state.isPlaying && spinDisc,
-            colors = colors,
-            onNext = viewModel::next,
-            onPrevious = viewModel::previous,
-            modifier = Modifier.padding(top = 8.dp).weight(1f, fill = false),
-        )
+        // The disc takes all the free space (largest square that fits); everything else sits low.
+        Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
+            SwipeableArtwork(
+                albumId = track.albumId,
+                spinning = state.isPlaying && spinDisc,
+                colors = colors,
+                onNext = viewModel::next,
+                onPrevious = viewModel::previous,
+            )
+        }
 
         Row(Modifier.fillMaxWidth().padding(top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -222,7 +221,7 @@ fun PlayerScreen(
         }
 
         Row(
-            Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -246,6 +245,9 @@ fun PlayerScreen(
                 )
             }
             SleepTimerButton(state.sleep) { sleepOpen = true }
+            IconButton(onClick = { queueOpen = true }) {
+                Icon(AppIcons.Queue, contentDescription = stringResource(R.string.cd_queue))
+            }
         }
     }
     }

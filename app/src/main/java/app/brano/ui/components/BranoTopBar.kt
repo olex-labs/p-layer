@@ -1,6 +1,10 @@
 package app.brano.ui.components
 
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.Modifier
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
@@ -27,10 +31,18 @@ fun BranoTopBar(
     } else {
         MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black)
     }
+    val glow = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
     TopAppBar(
         title = { ProvideTextStyle(style, title) },
         navigationIcon = navigationIcon,
         actions = actions,
         expandedHeight = if (large) 80.dp else TopAppBarDefaults.TopAppBarExpandedHeight,
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+        modifier = if (large) {
+            // Static gradient, drawn once per frame of the bar only: no blur, no shader.
+            Modifier.drawBehind { drawRect(Brush.verticalGradient(listOf(glow, Color.Transparent))) }
+        } else {
+            Modifier
+        },
     )
 }

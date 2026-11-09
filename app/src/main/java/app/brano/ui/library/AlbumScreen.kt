@@ -1,6 +1,8 @@
 package app.brano.ui.library
 
 import androidx.compose.foundation.layout.Arrangement
+import app.brano.ui.components.formatTotalDuration
+import app.brano.ui.components.CoverHeader
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,19 +55,18 @@ fun AlbumScreen(
         } else {
             LazyColumn(Modifier.fillMaxSize()) {
                 item(key = "header") {
-                    Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Artwork(album.id, Modifier.size(160.dp))
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(album.artist ?: stringResource(R.string.unknown_artist), style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black))
-                            Text(
-                                stringResource(R.string.tracks_count, album.trackCount) +
-                                    if (album.year > 0) " · ${album.year}" else "",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
+                    CoverHeader(
+                        albumId = album.id,
+                        subtitle = album.artist ?: stringResource(R.string.unknown_artist),
+                        meta = listOfNotNull(
+                            album.year.takeIf { it > 0 }?.toString(),
+                            stringResource(R.string.tracks_count, album.trackCount),
+                            formatTotalDuration(album.tracks.sumOf { it.durationMs }),
+                        ).joinToString(" · "),
+                        onPlay = { viewModel.play(album.tracks, 0) },
+                        onShuffle = { viewModel.shuffle(album.tracks) },
+                    )
                 }
-                item(key = "actions") { Box(Modifier.padding(horizontal = 16.dp)) { PlayShuffleRow(album.tracks, viewModel) } }
                 trackItems(
                     album.tracks, currentId, selection,
                     onPlay = { viewModel.play(album.tracks, it) },
