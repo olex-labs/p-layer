@@ -1,6 +1,14 @@
 package app.brano.ui.library
 
 import androidx.activity.compose.BackHandler
+import app.brano.ui.theme.PillShape
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import app.brano.ui.components.BranoTopBar
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.layout.Arrangement
@@ -61,8 +69,9 @@ internal fun SelectableScaffold(
     var sheetTracks by remember { mutableStateOf<List<Track>>(emptyList()) }
     var sheetFromSelection by remember { mutableStateOf(false) }
     BackHandler(enabled = selection.active) { selection.clear() }
+    val collapse = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    Column(Modifier.fillMaxSize()) {
+    Column(if (onBack == null) Modifier.fillMaxSize().nestedScroll(collapse.nestedScrollConnection) else Modifier.fillMaxSize()) {
         if (selection.active) {
             SelectionTopBar(
                 count = selection.selected.size,
@@ -75,6 +84,7 @@ internal fun SelectableScaffold(
         } else {
             BranoTopBar(
                 large = onBack == null,
+                scrollBehavior = if (onBack == null) collapse else null,
                 title = { Text(title) },
                 navigationIcon = {
                     if (onBack != null) {
@@ -147,12 +157,16 @@ fun LibraryScreen(
             tracks.isEmpty() -> EmptyLibrary(onOpenSettings)
             else -> Column(Modifier.fillMaxSize()) {
                 val labels = listOf(R.string.tab_tracks, R.string.tab_albums, R.string.tab_artists, R.string.tab_folders)
-                PrimaryTabRow(selectedTabIndex = pager.currentPage) {
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     labels.forEachIndexed { i, label ->
-                        Tab(
+                        FilterChip(
                             selected = pager.currentPage == i,
                             onClick = { scope.launch { pager.animateScrollToPage(i) } },
-                            text = { Text(stringResource(label)) },
+                            label = { Text(stringResource(label)) },
+                            shape = PillShape,
                         )
                     }
                 }
