@@ -1,6 +1,8 @@
 package app.brano.ui.playlists
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import app.brano.ui.components.formatTotalDuration
+import app.brano.ui.components.CoverHeader
 import app.brano.ui.components.BranoTopBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -237,16 +239,15 @@ private fun DetailList(
 
     LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
         item(key = "actions") {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilledTonalButton(onClick = { viewModel.play(items.indexOfFirst { it.track != null }.coerceAtLeast(0)) }) {
-                    Icon(AppIcons.Play, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text(stringResource(R.string.play_all))
-                }
-                FilledTonalButton(onClick = viewModel::shuffle) {
-                    Icon(AppIcons.Shuffle, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text(stringResource(R.string.shuffle))
-                }
-            }
+            val tracks = items.mapNotNull { it.track }
+            CoverHeader(
+                albumId = tracks.firstOrNull()?.albumId,
+                subtitle = null,
+                meta = stringResource(R.string.tracks_count, tracks.size) + " · " +
+                    formatTotalDuration(tracks.sumOf { it.durationMs }),
+                onPlay = { viewModel.play(items.indexOfFirst { it.track != null }.coerceAtLeast(0)) },
+                onShuffle = viewModel::shuffle,
+            )
         }
         items(rows.size, key = { rows[it].key }) { index ->
             val row = rows[index]

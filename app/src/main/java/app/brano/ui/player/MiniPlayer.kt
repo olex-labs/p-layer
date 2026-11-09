@@ -69,7 +69,7 @@ fun MiniPlayer(
                     Text(
                         track.artist ?: stringResource(R.string.unknown_artist),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )

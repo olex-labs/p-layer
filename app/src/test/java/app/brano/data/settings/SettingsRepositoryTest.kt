@@ -37,7 +37,7 @@ class SettingsRepositoryTest {
     @Test fun settings_unknownEnumFallsBackToDefault() = runTest {
         val ds = dataStore("a")
         ds.edit { it[stringPreferencesKey("theme")] = "PURPLE" }
-        assertThat(SettingsRepository(ds).settings.first().theme).isEqualTo(ThemeMode.SYSTEM)
+        assertThat(SettingsRepository(ds).settings.first().theme).isEqualTo(AppSettings().theme)
     }
 
     @Test fun spinDisc_defaultsToTrueWhenKeyMissing() = runTest {
