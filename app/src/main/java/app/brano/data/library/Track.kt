@@ -17,6 +17,9 @@ data class Track(
     val trackNumber: Int,
     val year: Int,
     val contentUri: String,
+    // Defaults keep older library snapshots readable.
+    val mimeType: String? = null,
+    val bitrateKbps: Int = 0,
 )
 
 data class TrackRef(val mediaStoreId: Long, val path: String)
