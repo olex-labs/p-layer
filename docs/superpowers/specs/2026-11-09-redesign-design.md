@@ -29,12 +29,11 @@ Direzione scelta dall'utente (vedi `docs/preview/direzioni.html`):
 - Nuovo `BranoShapes.kt` con le forme condivise:
   - `CoverShape`: angoli asimmetrici 14/30/14/30 dp;
   - `PillShape`: 50%.
-- Nuovo `PlayerColors.kt`, funzione pura e testabile `playerColors(palette)` che restituisce:
-  - **luce:** vibrant o light-vibrant;
-  - **profondo:** dark-muted, oppure la luce scurita al 15% di luminosità;
+- Nuovo `PlayerColors.kt`, funzione pura e testabile `playerColors(seed)`. Parte dal seme dell'album che `ArtworkSeedLoader` calcola già, quindi nessun lavoro in più sulle immagini. Restituisce:
+  - **luce:** tinta del seme, luminosità media;
+  - **profondo:** stessa tinta, molto scura;
   - **testo:** quasi bianco, con contrasto ≥ 4.5:1 sul colore profondo garantito dalla funzione;
-  - **accento:** per la barra di avanzamento e il pulsante play.
-- `ArtworkSeedLoader`: oltre al seme salva anche i `PlayerColors` dalla stessa `Palette`, già calcolata. Nessun lavoro in più sulle immagini.
+  - **accento:** per la barra di avanzamento.
 
 ### 2. Libreria e navigazione (stile C)
 
