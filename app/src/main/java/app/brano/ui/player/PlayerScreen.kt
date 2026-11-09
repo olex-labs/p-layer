@@ -18,6 +18,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,10 +54,14 @@ fun PlayerScreen(
     var sleepOpen by rememberSaveable { mutableStateOf(false) }
     val track = state.current
 
-    // Nothing loaded (e.g. the queue was cleared): the player has nothing to show.
     if (track == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            TextButton(onClick = onBack) { Text(stringResource(R.string.close)) }
+        // The player holds nothing (e.g. the queue was cleared): leave. Not while (re)connecting.
+        val empty = state.connected && !state.hasItems
+        LaunchedEffect(empty) { if (empty) onBack() }
+        if (state.connected && state.hasItems) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                TextButton(onClick = onBack) { Text(stringResource(R.string.close)) }
+            }
         }
         return
     }

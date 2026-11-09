@@ -95,7 +95,7 @@ class PlaybackResumeTest {
         delay(500) // let the onDestroy save land
 
         controller.connect()
-        val resumed = withTimeout(15_000) { controller.state.first { it.current != null } }
+        val resumed = withTimeout(15_000) { controller.state.first { it.connected && it.current != null } }
 
         assertEquals(first.id, resumed.current?.id)
         assertTrue("position ${resumed.positionMs}", resumed.positionMs in 2_000L..4_000L)

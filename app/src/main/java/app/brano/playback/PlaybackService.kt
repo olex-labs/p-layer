@@ -11,6 +11,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.ShuffleOrder
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
@@ -62,6 +63,7 @@ class PlaybackService : MediaSessionService() {
     /** Player errors since something last played or the user last picked a track. */
     private var consecutiveErrors = 0
 
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
         player = ExoPlayer.Builder(this)
@@ -75,6 +77,9 @@ class PlaybackService : MediaSessionService() {
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
+        // Shuffle physically reorders the items (PlayerController.setShuffle), so the shuffle flag
+        // must not reorder playback a second time: keep the timeline order in both modes.
+        player.setShuffleOrder(ShuffleOrder.UnshuffledShuffleOrder(0))
         sleepTimer = SleepTimer(
             scope,
             onVolume = { player.volume = it },

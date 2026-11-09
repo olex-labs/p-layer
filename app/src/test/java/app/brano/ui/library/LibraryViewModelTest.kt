@@ -88,9 +88,9 @@ class LibraryViewModelTest {
         val vm = LibraryViewModel(repo, settingsRepo, player, UnconfinedTestDispatcher(testScheduler))
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.tracks.collect {} }
         vm.playAll(1)
-        verify { player.play(match { ids(it) == listOf(2L, 1L, 3L) }, 1, false) }
+        verify { player.play(match { ids(it) == listOf(2L, 1L, 3L) }, 1) }
         vm.shuffleAll()
-        verify { player.play(match { ids(it) == listOf(2L, 1L, 3L) }, 0, true) }
+        verify { player.shuffle(match { ids(it) == listOf(2L, 1L, 3L) }) }
     }
 
     @Test fun tracks_areSortedOnTheInjectedDispatcher() = runTest {

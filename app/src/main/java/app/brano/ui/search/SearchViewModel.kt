@@ -52,7 +52,7 @@ class SearchViewModel internal constructor(
         savedState[KEY_QUERY] = q
     }
 
-    fun play(tracks: List<Track>, startIndex: Int, shuffle: Boolean = false) = player.play(tracks, startIndex, shuffle)
+    fun play(tracks: List<Track>, startIndex: Int) = player.play(tracks, startIndex)
 
     private companion object {
         const val KEY_QUERY = "query"

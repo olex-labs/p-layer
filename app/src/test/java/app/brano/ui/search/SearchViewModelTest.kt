@@ -63,6 +63,6 @@ class SearchViewModelTest {
     @Test fun play_delegatesToPlayer() {
         val vm = SearchViewModel(repo, player, SavedStateHandle(), UnconfinedTestDispatcher())
         vm.play(tracks, 1)
-        verify { player.play(tracks, 1, false) }
+        verify { player.play(tracks, 1) }
     }
 }

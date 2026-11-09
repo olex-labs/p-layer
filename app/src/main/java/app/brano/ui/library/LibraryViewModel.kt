@@ -82,7 +82,9 @@ class LibraryViewModel internal constructor(
 
     fun playAll(startIndex: Int) = player.play(tracks.value, startIndex)
 
-    fun shuffleAll() = player.play(tracks.value, 0, shuffle = true)
+    fun shuffleAll() = player.shuffle(tracks.value)
 
-    fun play(tracks: List<Track>, startIndex: Int, shuffle: Boolean = false) = player.play(tracks, startIndex, shuffle)
+    fun play(tracks: List<Track>, startIndex: Int) = player.play(tracks, startIndex)
+
+    fun shuffle(tracks: List<Track>) = player.shuffle(tracks)
 }

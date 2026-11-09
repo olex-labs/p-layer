@@ -75,7 +75,7 @@ class PlaylistDetailViewModelTest {
 
         vm.play(2)
 
-        verify { player.play(listOf(tracks[0], tracks[2], tracks[3]), 1, false) }
+        verify { player.play(listOf(tracks[0], tracks[2], tracks[3]), 1) }
     }
 
     @Test fun play_onUnavailableItemDoesNothing() = runTest(UnconfinedTestDispatcher()) {
@@ -85,7 +85,7 @@ class PlaylistDetailViewModelTest {
 
         vm.play(1)
 
-        verify(exactly = 0) { player.play(any(), any(), any()) }
+        verify(exactly = 0) { player.play(any(), any()) }
     }
 
     @Test fun shuffle_usesAvailableTracksOnly() = runTest(UnconfinedTestDispatcher()) {
@@ -95,7 +95,7 @@ class PlaylistDetailViewModelTest {
 
         vm.shuffle()
 
-        verify { player.play(listOf(tracks[0], tracks[1]), 0, true) }
+        verify { player.shuffle(listOf(tracks[0], tracks[1])) }
     }
 
     @Test fun userPlaylist_isEditableAndExposesTitleAndItems() = runTest(UnconfinedTestDispatcher()) {

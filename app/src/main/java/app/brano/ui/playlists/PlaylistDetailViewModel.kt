@@ -124,12 +124,12 @@ class PlaylistDetailViewModel internal constructor(
         if (all.getOrNull(index)?.track == null) return
         val queue = all.mapNotNull { it.track }
         val start = all.subList(0, index).count { it.track != null }
-        player.play(queue, start, false)
+        player.play(queue, start)
     }
 
     fun shuffle() {
         val queue = items.value.mapNotNull { it.track }
-        if (queue.isNotEmpty()) player.play(queue, 0, true)
+        if (queue.isNotEmpty()) player.shuffle(queue)
     }
 
     fun move(from: Int, to: Int) {

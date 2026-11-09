@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.media3.common.C
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
@@ -22,6 +23,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -42,7 +44,8 @@ import kotlinx.coroutines.launch
  *
  * Connects lazily ([connect] or the first command); commands issued before the connection is
  * ready are queued and run once it is. Queue indices taken and exposed here refer to
- * [PlayerUiState.queue], which skips items no longer in the library.
+ * [PlayerUiState.queue], which skips items that cannot be shown (neither in the library nor
+ * carrying their own metadata).
  */
 @Singleton
 class PlayerController @Inject constructor(
@@ -64,6 +67,10 @@ class PlayerController @Inject constructor(
 
     /** Timeline index in the controller for each entry of [PlayerUiState.queue]. */
     private var timelineIndices: List<Int> = emptyList()
+
+    /** Media ids in the order before shuffle was turned on in this process; null when unknown. */
+    private var unshuffledIds: List<String>? = null
+    private val random = Random.Default
 
     init {
         scope.launch {
@@ -107,18 +114,30 @@ class PlayerController @Inject constructor(
         }
     }
 
-    fun play(tracks: List<Track>, startIndex: Int = 0, shuffle: Boolean = false) {
+    /** Plays [tracks] from [startIndex], keeping the current shuffle mode (shuffled after that track if on). */
+    fun play(tracks: List<Track>, startIndex: Int = 0) {
         if (tracks.isEmpty()) return
-        withController { c ->
-            c.shuffleModeEnabled = shuffle
-            c.setMediaItems(
-                tracks.map(MediaItemMapper::toMediaItem),
-                startIndex.coerceIn(0, tracks.lastIndex),
-                0L,
-            )
-            c.prepare()
-            c.play()
+        withController { c -> start(c, tracks, startIndex.coerceIn(0, tracks.lastIndex), c.shuffleModeEnabled) }
+    }
+
+    /** "Casuale": all of [tracks] in random order, starting from a random one, with shuffle on. */
+    fun shuffle(tracks: List<Track>) {
+        if (tracks.isEmpty()) return
+        withController { c -> start(c, tracks, random.nextInt(tracks.size), shuffle = true) }
+    }
+
+    private fun start(c: MediaController, tracks: List<Track>, startIndex: Int, shuffle: Boolean) {
+        val items = tracks.map(MediaItemMapper::toMediaItem)
+        if (shuffle) {
+            unshuffledIds = items.map { it.mediaId }
+            c.setMediaItems(QueueShuffle.shuffledFrom(items, startIndex, random), 0, 0L)
+        } else {
+            unshuffledIds = null
+            c.setMediaItems(items, startIndex, 0L)
         }
+        c.shuffleModeEnabled = shuffle
+        c.prepare()
+        c.play()
     }
 
     fun playNext(tracks: List<Track>) {
@@ -167,7 +186,41 @@ class PlayerController @Inject constructor(
         _state.update { it.copy(positionMs = ms) }
     }
 
-    fun setShuffle(on: Boolean) = withController { it.shuffleModeEnabled = on }
+    /**
+     * Shuffle reorders the queue itself: on, every other item moves after the current one in random
+     * order; off, the order from before shuffling comes back (when known in this process), with
+     * items added meanwhile at the end. The player's shuffle flag only records the mode, since the
+     * service uses an identity shuffle order.
+     */
+    fun setShuffle(on: Boolean) = withController { c ->
+        if (on == c.shuffleModeEnabled) return@withController
+        val cur = c.currentMediaItemIndex
+        val items = List(c.mediaItemCount) { c.getMediaItemAt(it) }
+        if (cur in items.indices) {
+            if (on) {
+                unshuffledIds = items.map { it.mediaId }
+                rearrange(c, QueueShuffle.shuffledFrom(items, cur, random), 0)
+            } else {
+                unshuffledIds?.let { original ->
+                    val (ids, index) = QueueShuffle.restore(items.map { it.mediaId }, cur, original)
+                    val byId = items.associateBy { it.mediaId }
+                    rearrange(c, ids.map { byId.getValue(it) }, index)
+                }
+            }
+        }
+        if (!on) unshuffledIds = null
+        c.shuffleModeEnabled = on
+    }
+
+    /** Replaces everything around the current item so the queue becomes [order], with the current at [currentAt]. */
+    private fun rearrange(c: MediaController, order: List<MediaItem>, currentAt: Int) {
+        val cur = c.currentMediaItemIndex
+        if (cur < 0 || currentAt !in order.indices) return
+        if (cur + 1 < c.mediaItemCount) c.removeMediaItems(cur + 1, c.mediaItemCount)
+        if (cur > 0) c.removeMediaItems(0, cur)
+        if (currentAt > 0) c.addMediaItems(0, order.subList(0, currentAt))
+        if (currentAt < order.lastIndex) c.addMediaItems(order.subList(currentAt + 1, order.size))
+    }
 
     fun cycleRepeat() = withController { c ->
         c.repeatMode = when (c.repeatMode) {
@@ -206,24 +259,25 @@ class PlayerController @Inject constructor(
         positionJob?.cancel()
         positionJob = null
         timelineIndices = emptyList()
-        _state.value = PlayerUiState()
+        // Keep the last track visible until the next connection replaces it (no blank flash on return).
+        _state.update { it.copy(connected = false, isPlaying = false) }
     }
 
     private fun refresh(c: MediaController, rebuildQueue: Boolean) {
         var queue = _state.value.queue
+        val current: Track?
         if (rebuildQueue) {
-            val tracks = ArrayList<Track>(c.mediaItemCount)
-            val indices = ArrayList<Int>(c.mediaItemCount)
-            for (i in 0 until c.mediaItemCount) {
-                libraryRepository.trackById(MediaItemMapper.idOf(c.getMediaItemAt(i)))?.let {
-                    tracks += it
-                    indices += i
-                }
-            }
-            queue = tracks
-            timelineIndices = indices
+            val view = PlayerStateBuilder.build(
+                List(c.mediaItemCount) { c.getMediaItemAt(it) },
+                c.currentMediaItemIndex,
+                libraryRepository::trackById,
+            )
+            queue = view.queue
+            timelineIndices = view.timelineIndices
+            current = view.current
+        } else {
+            current = c.currentMediaItem?.let { PlayerStateBuilder.resolve(it, libraryRepository::trackById) }
         }
-        val current = c.currentMediaItem?.let { libraryRepository.trackById(MediaItemMapper.idOf(it)) }
         val duration = c.duration.takeIf { it != C.TIME_UNSET } ?: current?.durationMs ?: 0L
         _state.update {
             it.copy(
@@ -235,6 +289,8 @@ class PlayerController @Inject constructor(
                 index = timelineIndices.indexOf(c.currentMediaItemIndex),
                 shuffle = c.shuffleModeEnabled,
                 repeatMode = c.repeatMode,
+                connected = true,
+                hasItems = c.mediaItemCount > 0,
             )
         }
         updatePositionPolling(c)

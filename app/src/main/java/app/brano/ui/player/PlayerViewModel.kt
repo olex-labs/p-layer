@@ -44,7 +44,7 @@ class PlayerViewModel internal constructor(
     val state: StateFlow<PlayerUiState> = controller.state
         .map { it.copy(positionMs = 0) }
         .distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PlayerUiState())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), controller.state.value.copy(positionMs = 0))
 
     val position: StateFlow<Long> = controller.state
         .map { it.positionMs }

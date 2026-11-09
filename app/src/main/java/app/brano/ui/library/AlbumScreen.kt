@@ -82,7 +82,7 @@ internal fun PlayShuffleRow(tracks: List<Track>, viewModel: LibraryViewModel) {
             Icon(AppIcons.Play, contentDescription = null, modifier = Modifier.size(18.dp))
             Text(stringResource(R.string.play_all))
         }
-        FilledTonalButton(onClick = { viewModel.play(tracks, 0, shuffle = true) }) {
+        FilledTonalButton(onClick = { viewModel.shuffle(tracks) }) {
             Icon(AppIcons.Shuffle, contentDescription = null, modifier = Modifier.size(18.dp))
             Text(stringResource(R.string.shuffle))
         }
