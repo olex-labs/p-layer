@@ -30,8 +30,8 @@ object Destinations {
 /**
  * The tab to highlight once [route] is shown: a top-level route selects itself; detail screens
  * (album, artist, folder, playlist, smart, player) keep [selected], the tab they were opened from.
- * Since every tab switch pops back to the start destination, this is the last top-level route in
- * the back stack (NavController.currentBackStack itself is a restricted API).
+ * A tab click also sets the selection directly, because restoring that tab's saved back stack can
+ * show one of its detail screens without its top-level route ever appearing.
  */
 fun nextSelectedTab(selected: String, route: String?): String =
     if (route != null && route in Destinations.topLevelRoutes) route else selected

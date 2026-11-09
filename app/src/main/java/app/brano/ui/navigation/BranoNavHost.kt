@@ -114,6 +114,9 @@ private fun BranoShell(viewModel: AppViewModel) {
                             NavigationBarItem(
                                 selected = dest.route == selectedTab,
                                 onClick = {
+                                    // Set it here too: restoring a tab's saved stack can land straight on one
+                                    // of its detail screens, so the top-level route is never shown.
+                                    selectedTab = dest.route
                                     navController.navigate(dest.route) {
                                         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                         launchSingleTop = true
