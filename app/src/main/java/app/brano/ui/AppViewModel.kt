@@ -62,6 +62,9 @@ class AppViewModel @Inject constructor(
 
     fun playNext(tracks: List<Track>) = playerController.playNext(tracks)
 
+    /** False for a queued file that is no longer in the library (its album and artist pages are gone). */
+    fun isInLibrary(track: Track): Boolean = libraryRepository.trackById(track.id) != null
+
     fun addToQueue(tracks: List<Track>) = playerController.addToQueue(tracks)
 
     fun addToPlaylist(id: Long, tracks: List<Track>) {

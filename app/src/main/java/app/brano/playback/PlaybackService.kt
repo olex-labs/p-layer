@@ -53,6 +53,9 @@ class PlaybackService : MediaSessionService() {
     )
 
     private lateinit var player: ExoPlayer
+
+    /** What the session exposes: shuffles for every controller and reports new lists. */
+    private lateinit var shufflingPlayer: ShufflingPlayer
     private lateinit var session: MediaSession
     private lateinit var sleepTimer: SleepTimer
     private lateinit var playCountTracker: PlayCountTracker
@@ -77,9 +80,11 @@ class PlaybackService : MediaSessionService() {
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
-        // Shuffle physically reorders the items (PlayerController.setShuffle), so the shuffle flag
-        // must not reorder playback a second time: keep the timeline order in both modes.
+        // Shuffle physically reorders the items (ShufflingPlayer), so the shuffle flag must not
+        // reorder playback a second time: keep the timeline order in both modes.
         player.setShuffleOrder(ShuffleOrder.UnshuffledShuffleOrder(0))
+        // A new list is a fresh start: earlier failures must not count towards pausing this one.
+        shufflingPlayer = ShufflingPlayer(player) { consecutiveErrors = 0 }
         sleepTimer = SleepTimer(
             scope,
             onVolume = { player.volume = it },
@@ -92,7 +97,7 @@ class PlaybackService : MediaSessionService() {
             this, 0, Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        session = MediaSession.Builder(this, player)
+        session = MediaSession.Builder(this, shufflingPlayer)
             .setCallback(sessionCallback)
             .setSessionActivity(activityIntent)
             .build()
@@ -125,13 +130,13 @@ class PlaybackService : MediaSessionService() {
             ?: return
         if (player.mediaItemCount > 0) return // a controller already started something
         val restored = saved.restore(libraryRepository::trackById) ?: return
-        player.shuffleModeEnabled = saved.shuffle
         player.repeatMode = saved.repeatMode
         player.setMediaItems(
             restored.tracks.map(MediaItemMapper::toMediaItem),
             restored.index,
             restored.positionMs,
         )
+        shufflingPlayer.restoreShuffle(saved.shuffle, saved.unshuffledIds?.map(Long::toString))
         player.playWhenReady = false
         player.prepare()
     }
@@ -159,6 +164,7 @@ class PlaybackService : MediaSessionService() {
             positionMs = player.currentPosition,
             shuffle = player.shuffleModeEnabled,
             repeatMode = player.repeatMode,
+            unshuffledIds = shufflingPlayer.unshuffledIds?.mapNotNull(String::toLongOrNull),
         )
         appScope.launch(saveDispatcher) {
             runCatching { queueStateStore.save(state) }

@@ -17,6 +17,8 @@ data class QueueState(
     val positionMs: Long,
     val shuffle: Boolean,
     val repeatMode: Int,
+    /** Track ids in the order before shuffle was turned on; null when not shuffled or unknown. */
+    val unshuffledIds: List<Long>? = null,
 )
 
 data class RestoredQueue(val tracks: List<Track>, val index: Int, val positionMs: Long)
@@ -29,6 +31,7 @@ class QueueStateStore(private val store: DataStore<Preferences>) {
             it[POSITION] = s.positionMs
             it[SHUFFLE] = s.shuffle
             it[REPEAT] = s.repeatMode
+            if (s.unshuffledIds != null) it[UNSHUFFLED] = s.unshuffledIds.joinToString(",") else it.remove(UNSHUFFLED)
         }
     }
 
@@ -41,6 +44,7 @@ class QueueStateStore(private val store: DataStore<Preferences>) {
             positionMs = p[POSITION] ?: 0L,
             shuffle = p[SHUFFLE] ?: false,
             repeatMode = p[REPEAT] ?: 0,
+            unshuffledIds = p[UNSHUFFLED]?.split(',')?.mapNotNull { it.trim().toLongOrNull() },
         )
     }
 
@@ -50,6 +54,7 @@ class QueueStateStore(private val store: DataStore<Preferences>) {
         val POSITION = longPreferencesKey("position_ms")
         val SHUFFLE = booleanPreferencesKey("shuffle")
         val REPEAT = intPreferencesKey("repeat_mode")
+        val UNSHUFFLED = stringPreferencesKey("unshuffled_ids")
     }
 }
 

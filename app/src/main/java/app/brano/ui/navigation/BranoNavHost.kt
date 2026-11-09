@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -137,51 +138,55 @@ private fun BranoShell(viewModel: AppViewModel) {
             }
         },
     ) { padding ->
+        // The last padding seen outside the player: screens keep it while the player slides over them,
+        // so the bottom bar disappearing does not make them jump.
+        var stablePadding by remember { mutableStateOf(padding) }
+        if (!onPlayer) stablePadding = padding
+        val pad = Modifier.padding(stablePadding)
         NavHost(
             navController = navController,
             startDestination = Destinations.LIBRARY,
-            // The player draws its own background edge to edge and pads itself.
-            modifier = Modifier.padding(if (onPlayer) PaddingValues(0.dp) else padding),
+            // Each screen pads itself (see `pad`); the player draws edge to edge and pads itself.
         ) {
             val toAlbum: (Long) -> Unit = { navController.navigate(Destinations.album(it)) }
             val toArtist: (Long) -> Unit = { navController.navigate(Destinations.artist(it)) }
             val toFolder: (String) -> Unit = { navController.navigate(Destinations.folder(it)) }
-            composable(Destinations.LIBRARY) {
+            composable(Destinations.LIBRARY) { Box(pad) {
                 LibraryScreen(
                     onOpenAlbum = toAlbum,
                     onOpenArtist = toArtist,
                     onOpenFolder = toFolder,
                     onOpenSettings = { navController.navigate(Destinations.SETTINGS) { launchSingleTop = true } },
                 )
-            }
-            composable(Destinations.SEARCH) { SearchScreen(onOpenAlbum = toAlbum, onOpenArtist = toArtist) }
-            composable(Destinations.PLAYLISTS) {
+            } }
+            composable(Destinations.SEARCH) { Box(pad) { SearchScreen(onOpenAlbum = toAlbum, onOpenArtist = toArtist) } }
+            composable(Destinations.PLAYLISTS) { Box(pad) {
                 PlaylistsScreen(
                     onOpenPlaylist = { navController.navigate(Destinations.playlist(it)) },
                     onOpenSmart = { navController.navigate(Destinations.smart(it)) },
                 )
-            }
-            composable(Destinations.SETTINGS) { SettingsScreen() }
-            composable(Destinations.ALBUM, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
+            } }
+            composable(Destinations.SETTINGS) { Box(pad) { SettingsScreen() } }
+            composable(Destinations.ALBUM, arguments = listOf(navArgument("id") { type = NavType.LongType })) { Box(pad) {
                 AlbumScreen(
                     albumId = it.arguments!!.getLong("id"),
                     onBack = { navController.popBackStack() },
                     onOpenAlbum = toAlbum,
                     onOpenArtist = toArtist,
                 )
-            }
-            composable(Destinations.ARTIST, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
+            } }
+            composable(Destinations.ARTIST, arguments = listOf(navArgument("id") { type = NavType.LongType })) { Box(pad) {
                 ArtistScreen(
                     artistId = it.arguments!!.getLong("id"),
                     onBack = { navController.popBackStack() },
                     onOpenAlbum = toAlbum,
                     onOpenArtist = toArtist,
                 )
-            }
+            } }
             composable(
                 Destinations.FOLDER,
                 arguments = listOf(navArgument("path") { type = NavType.StringType; nullable = true; defaultValue = null }),
-            ) {
+            ) { Box(pad) {
                 FolderScreen(
                     path = it.arguments?.getString("path"),
                     onBack = { navController.popBackStack() },
@@ -189,13 +194,13 @@ private fun BranoShell(viewModel: AppViewModel) {
                     onOpenAlbum = toAlbum,
                     onOpenArtist = toArtist,
                 )
-            }
-            composable(Destinations.PLAYLIST, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
+            } }
+            composable(Destinations.PLAYLIST, arguments = listOf(navArgument("id") { type = NavType.LongType })) { Box(pad) {
                 PlaylistDetailScreen(onBack = { navController.popBackStack() }, onOpenAlbum = toAlbum, onOpenArtist = toArtist)
-            }
-            composable(Destinations.SMART, arguments = listOf(navArgument("kind") { type = NavType.StringType })) {
+            } }
+            composable(Destinations.SMART, arguments = listOf(navArgument("kind") { type = NavType.StringType })) { Box(pad) {
                 PlaylistDetailScreen(onBack = { navController.popBackStack() }, onOpenAlbum = toAlbum, onOpenArtist = toArtist)
-            }
+            } }
             composable(Destinations.PLAYER) {
                 PlayerScreen(
                     onBack = { navController.popBackStack() },
