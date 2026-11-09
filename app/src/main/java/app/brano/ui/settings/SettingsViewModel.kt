@@ -41,6 +41,7 @@ class SettingsViewModel @Inject constructor(
     fun setTheme(m: ThemeMode) = update { it.copy(theme = m) }
     fun setAmoled(b: Boolean) = update { it.copy(amoled = b) }
     fun setSpinDisc(b: Boolean) = update { it.copy(spinDisc = b) }
+    fun setOnlineLyrics(b: Boolean) = update { it.copy(onlineLyrics = b) }
     fun setDynamicColor(b: Boolean) = update { it.copy(dynamicColor = b) }
     /** [s] comes from the slider: rounded, since its steps land on values like 29.999998. */
     fun setMinDurationSec(s: Float) = update { it.copy(minDurationMs = s.roundToInt() * 1_000L) }

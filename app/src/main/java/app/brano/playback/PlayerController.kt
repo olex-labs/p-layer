@@ -65,6 +65,9 @@ class PlayerController @Inject constructor(
     private val pending = ArrayList<(MediaController) -> Unit>()
     private var positionJob: Job? = null
 
+    /** Position ticks every 200 ms instead of 500 ms, while synced lyrics are on screen. */
+    @Volatile var fastPosition: Boolean = false
+
     /** Timeline index in the controller for each entry of [PlayerUiState.queue]. */
     private var timelineIndices: List<Int> = emptyList()
 
@@ -267,7 +270,7 @@ class PlayerController @Inject constructor(
             positionJob = scope.launch {
                 while (isActive) {
                     _state.update { it.copy(positionMs = c.currentPosition) }
-                    delay(POSITION_INTERVAL_MS)
+                    delay(if (fastPosition) FAST_POSITION_INTERVAL_MS else POSITION_INTERVAL_MS)
                 }
             }
         } else {
@@ -311,5 +314,6 @@ class PlayerController @Inject constructor(
 
     private companion object {
         const val POSITION_INTERVAL_MS = 500L
+        const val FAST_POSITION_INTERVAL_MS = 200L
     }
 }

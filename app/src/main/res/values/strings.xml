@@ -135,4 +135,9 @@
     <string name="action_unhide_all">Mostra tutti</string>
     <string name="action_hide">Nascondi da Brano</string>
     <string name="action_delete">Elimina dal telefono</string>
+    <string name="cd_lyrics">Testo</string>
+    <string name="lyrics_none">Nessun testo per questo brano</string>
+    <string name="lyrics_enable_online">Puoi attivare la ricerca online dei testi nelle Impostazioni, oppure mettere un file .lrc accanto alla canzone</string>
+    <string name="settings_online_lyrics">Cerca testi online</string>
+    <string name="settings_online_lyrics_hint">Usa internet solo per scaricare i testi da LRCLIB</string>
 </resources>

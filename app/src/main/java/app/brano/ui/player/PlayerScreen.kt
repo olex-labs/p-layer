@@ -84,6 +84,9 @@ fun PlayerScreen(
     val favorite by viewModel.isFavorite.collectAsStateWithLifecycle()
     val seed by viewModel.seedColor.collectAsStateWithLifecycle()
     val spinDisc by viewModel.spinDisc.collectAsStateWithLifecycle()
+    val lyricsVisible by viewModel.lyricsVisible.collectAsStateWithLifecycle()
+    val lyrics by viewModel.lyrics.collectAsStateWithLifecycle()
+    val onlineLyrics by viewModel.onlineLyrics.collectAsStateWithLifecycle()
     var queueOpen by rememberSaveable { mutableStateOf(false) }
     var sleepOpen by rememberSaveable { mutableStateOf(false) }
     var menuOpen by rememberSaveable { mutableStateOf(false) }
@@ -159,7 +162,9 @@ fun PlayerScreen(
         // Landscape: disc on the left, details and controls on the right, so the disc stays big.
         val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         val disc: @Composable (Modifier) -> Unit = { modifier ->
-            Box(modifier, contentAlignment = Alignment.Center) {
+            if (lyricsVisible) {
+                LyricsView(lyrics, position = { position.value }, onSeek = viewModel::seekTo, onlineEnabled = onlineLyrics, modifier = modifier)
+            } else Box(modifier, contentAlignment = Alignment.Center) {
                 SwipeableArtwork(
                     albumId = track.albumId,
                     spinning = state.isPlaying && spinDisc,
@@ -256,6 +261,13 @@ fun PlayerScreen(
                     )
                 }
                 SleepTimerButton(state.sleep) { sleepOpen = true }
+                IconButton(onClick = viewModel::toggleLyrics) {
+                    Icon(
+                        AppIcons.Lyrics,
+                        contentDescription = stringResource(R.string.cd_lyrics),
+                        tint = if (lyricsVisible) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 IconButton(onClick = { queueOpen = true }) {
                     Icon(AppIcons.Queue, contentDescription = stringResource(R.string.cd_queue))
                 }

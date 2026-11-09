@@ -1,6 +1,10 @@
 package app.brano.ui.player
 
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import app.brano.lyrics.LyricsRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.brano.data.db.FavoritesDao
@@ -31,6 +35,7 @@ class PlayerViewModel internal constructor(
     private val playlists: PlaylistDao,
     seeds: ArtworkSeedLoader,
     settings: SettingsRepository,
+    private val lyricsRepository: LyricsRepository,
     private val now: () -> Long,
 ) : ViewModel() {
 
@@ -41,7 +46,8 @@ class PlayerViewModel internal constructor(
         playlists: PlaylistDao,
         seeds: ArtworkSeedLoader,
         settings: SettingsRepository,
-    ) : this(controller, favorites, playlists, seeds, settings, System::currentTimeMillis)
+        lyricsRepository: LyricsRepository,
+    ) : this(controller, favorites, playlists, seeds, settings, lyricsRepository, System::currentTimeMillis)
 
     /** Everything except the position, so the 500 ms position ticks do not recompose the screen. */
     val state: StateFlow<PlayerUiState> = controller.state
@@ -78,6 +84,39 @@ class PlayerViewModel internal constructor(
             SharingStarted.WhileSubscribed(5_000),
             controller.state.value.current?.albumId?.let(seeds::cachedSeed),
         )
+
+    val onlineLyrics: StateFlow<Boolean> = settings.settings
+        .map { it.onlineLyrics }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    private val _lyricsVisible = MutableStateFlow(false)
+
+    /** Lyrics shown in place of the disc. */
+    val lyricsVisible: StateFlow<Boolean> = _lyricsVisible.asStateFlow()
+
+    /** Loaded only while visible, for the current track; a track change cancels a pending load. */
+    val lyrics: StateFlow<LyricsState> = combine(_lyricsVisible, controller.state.map { it.current }.distinctUntilChanged()) { v, t -> v to t }
+        .transformLatest { (visible, track) ->
+            when {
+                !visible -> emit(LyricsState.Hidden)
+                track == null -> emit(LyricsState.None)
+                else -> {
+                    emit(LyricsState.Loading)
+                    emit(lyricsRepository.load(track)?.let { LyricsState.Shown(it) } ?: LyricsState.None)
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LyricsState.Hidden)
+
+    fun toggleLyrics() {
+        _lyricsVisible.value = !_lyricsVisible.value
+        controller.fastPosition = _lyricsVisible.value
+    }
+
+    override fun onCleared() {
+        controller.fastPosition = false
+    }
 
     fun toggleFavorite() {
         val track = controller.state.value.current ?: return

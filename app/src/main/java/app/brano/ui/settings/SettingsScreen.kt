@@ -113,6 +113,11 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 supportingContent = { Text(stringResource(R.string.settings_spin_disc_hint)) },
                 trailingContent = { Switch(checked = settings.spinDisc, onCheckedChange = viewModel::setSpinDisc) },
             )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_online_lyrics)) },
+                supportingContent = { Text(stringResource(R.string.settings_online_lyrics_hint)) },
+                trailingContent = { Switch(checked = settings.onlineLyrics, onCheckedChange = viewModel::setOnlineLyrics) },
+            )
             HorizontalDivider()
             Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Text(stringResource(R.string.settings_min_duration, sliderSec.roundToInt()), style = MaterialTheme.typography.bodyLarge)
