@@ -64,3 +64,9 @@ Bluetooth/auto, aspetto lockscreen, chiamata reale, fluidita' di scorrimento, ga
 - Avvio a freddo (emulatore, release, 9 prove): mediana v1.1 487 ms, v1 615 ms nelle stesse condizioni: nessuna regressione.
 - Scorrimento: frame lenti identici tra v1 e v1.1 sull'emulatore (dipendono dall'emulatore); da verificare dall'utente su telefono.
 - Disco che gira: fermo in pausa e con l'opzione spenta; da verificare dall'utente su telefono.
+
+## v1.6
+
+- Cartelle musicali con il selettore di sistema, nascondi/ripristina, elimina nel cestino, testi .lrc sincronizzati: verificati sull'emulatore (Android 16).
+- Avvio a freddo, installazione pulita, 2 giri alternati: v1.5 media 694 ms, v1.6 media 685 ms: nessuna regressione.
+- Da verificare dall'utente: testi incorporati in MP3/FLAC reali, ricerca online LRCLIB, eliminazione su Android 10, scheda SD come cartella musicale.

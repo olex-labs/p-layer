@@ -1,6 +1,8 @@
 package app.brano.ui.settings
 
 import androidx.annotation.StringRes
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.ListItemDefaults
 import app.brano.data.library.treeDocIdToPath
 import app.brano.data.db.HiddenTrackEntity
 import androidx.compose.ui.platform.LocalContext
@@ -229,6 +231,7 @@ private fun HiddenTracksDialog(
                             headlineContent = { Text(h.path.substringAfterLast('/'), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             supportingContent = { Text(h.path.substringBeforeLast('/'), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             trailingContent = { TextButton(onClick = { onUnhide(h.path) }) { Text(stringResource(R.string.action_unhide)) } },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         )
                     }
                 }
