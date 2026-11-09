@@ -23,7 +23,16 @@ object Destinations {
     fun folder(path: String? = null) = if (path == null) "folder" else "folder?path=${Uri.encode(path)}"
     fun playlist(id: Long) = "playlist/$id"
     fun smart(kind: String) = "smart/$kind"
+
+    val topLevelRoutes = setOf(LIBRARY, SEARCH, PLAYLISTS, SETTINGS)
 }
+
+/**
+ * The tab to highlight for a back stack (routes bottom to top): the last top-level route in it, so
+ * detail screens (album, artist, folder, playlist, smart) keep the tab they were opened from.
+ */
+fun selectedTopLevelRoute(backStackRoutes: List<String?>): String? =
+    backStackRoutes.lastOrNull { it in Destinations.topLevelRoutes }
 
 data class TopLevelDestination(val route: String, @param:StringRes val label: Int, val icon: ImageVector)
 

@@ -27,7 +27,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -75,6 +74,8 @@ private fun BranoShell(viewModel: AppViewModel) {
     val backStack by navController.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
     val onPlayer = route == Destinations.PLAYER
+    val entries by navController.currentBackStack.collectAsStateWithLifecycle()
+    val selectedTab = selectedTopLevelRoute(entries.map { it.destination.route })
 
     // POST_NOTIFICATIONS is requested the first time playback actually starts.
     var notificationsAsked by rememberSaveable { mutableStateOf(false) }
@@ -105,7 +106,7 @@ private fun BranoShell(viewModel: AppViewModel) {
                     NavigationBar {
                         topLevelDestinations.forEach { dest ->
                             NavigationBarItem(
-                                selected = backStack?.destination?.hierarchy?.any { it.route == dest.route } == true,
+                                selected = dest.route == selectedTab,
                                 onClick = {
                                     navController.navigate(dest.route) {
                                         popUpTo(navController.graph.findStartDestination().id) { saveState = true }
