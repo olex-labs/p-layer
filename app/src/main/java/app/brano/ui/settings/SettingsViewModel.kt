@@ -19,16 +19,29 @@ import kotlinx.coroutines.launch
 /** A library folder the user can exclude; [depth] drives the indentation in the chooser. */
 data class FolderChoice(val path: String, val name: String, val depth: Int)
 
+/**
+ * Tree order (parents before children). The library tree collapses track-less single-child chains into one
+ * node, so every path segment between a node and its parent gets its own choice.
+ */
 internal fun flattenFolders(root: FolderNode?, excluded: Set<String>): List<FolderChoice> {
     if (root == null) return emptyList()
     val out = ArrayList<FolderChoice>()
-    fun walk(n: FolderNode, depth: Int) {
-        val real = n.path != "/"
-        if (real && n.path !in excluded) out += FolderChoice(n.path, n.name.ifEmpty { n.path }, depth)
-        n.children.forEach { walk(it, if (real) depth + 1 else depth) }
+    fun walk(n: FolderNode, parentPath: String, depth: Int) {
+        var d = depth
+        var childParent = parentPath
+        if (n.path != "/") {
+            val segs = n.path.removePrefix(parentPath).split('/').filter { it.isNotEmpty() }
+            segs.forEachIndexed { i, seg ->
+                val path = parentPath.trimEnd('/') + "/" + segs.take(i + 1).joinToString("/")
+                if (path !in excluded) out += FolderChoice(path, seg, depth + i)
+            }
+            d = depth + segs.size
+            childParent = n.path
+        }
+        n.children.forEach { walk(it, childParent, d) }
     }
-    walk(root, 0)
-    return out.sortedBy { it.path.lowercase() }
+    walk(root, "/", 0)
+    return out
 }
 
 @HiltViewModel

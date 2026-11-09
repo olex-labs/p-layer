@@ -76,13 +76,32 @@ class SettingsViewModelTest {
         coVerify { library.refresh() }
     }
 
-    @Test fun flattenFolders_sortedIndentedAndSkipsExcluded() {
-        val a = FolderNode("/sdcard/Music/B", "B", emptyList(), emptyList())
-        val c = FolderNode("/sdcard/Music/A", "A", emptyList(), emptyList())
-        val music = FolderNode("/sdcard/Music", "Music", listOf(a, c), emptyList())
-        val root = FolderNode("/", "", listOf(music), emptyList())
+    @Test fun flattenFolders_treeOrderIndentedAndSkipsExcluded() {
+        val b = FolderNode("/sdcard/Music/B", "B", emptyList(), emptyList())
+        val a = FolderNode("/sdcard/Music/A", "A", emptyList(), emptyList())
+        val old = FolderNode("/sdcard/Music-old", "Music-old", emptyList(), emptyList())
+        val music = FolderNode("/sdcard/Music", "Music", listOf(a, b), emptyList())
+        val sd = FolderNode("/sdcard", "sdcard", listOf(music, old), emptyList())
+        val root = FolderNode("/", "", listOf(sd), emptyList())
         val out = flattenFolders(root, setOf("/sdcard/Music/B"))
-        assertThat(out.map { it.path }).containsExactly("/sdcard/Music", "/sdcard/Music/A").inOrder()
-        assertThat(out.map { it.depth }).containsExactly(0, 1).inOrder()
+        assertThat(out.map { it.path })
+            .containsExactly("/sdcard", "/sdcard/Music", "/sdcard/Music/A", "/sdcard/Music-old").inOrder()
+        assertThat(out.map { it.depth }).containsExactly(0, 1, 2, 1).inOrder()
+    }
+
+    @Test fun flattenFolders_collapsedChainOffersEverySegment() {
+        val media = FolderNode("/s/WhatsApp/Media", "WhatsApp/Media", emptyList(), emptyList())
+        val root = FolderNode("/", "", listOf(media), emptyList())
+        val out = flattenFolders(root, emptySet())
+        assertThat(out.map { it.path }).containsExactly("/s", "/s/WhatsApp", "/s/WhatsApp/Media").inOrder()
+        assertThat(out.map { it.depth }).containsExactly(0, 1, 2).inOrder()
+    }
+
+    @Test fun flattenFolders_collapsedRootNode() {
+        val music = FolderNode("/storage/emulated/0/Music", "Music", emptyList(), emptyList())
+        val out = flattenFolders(music, emptySet())
+        assertThat(out.map { it.path }).containsExactly(
+            "/storage", "/storage/emulated", "/storage/emulated/0", "/storage/emulated/0/Music",
+        ).inOrder()
     }
 }
