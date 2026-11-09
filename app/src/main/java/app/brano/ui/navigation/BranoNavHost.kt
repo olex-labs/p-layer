@@ -58,7 +58,13 @@ fun BranoRoot(viewModel: AppViewModel) {
     fun hasAudio() = ContextCompat.checkSelfPermission(context, audioPermission) == PackageManager.PERMISSION_GRANTED
     var granted by remember { mutableStateOf(hasAudio()) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { granted = hasAudio() }
-    LaunchedEffect(granted) { if (granted) viewModel.onAudioPermissionGranted() }
+    // Re-read the library only when the permission is actually granted now. At a cold start with the
+    // permission (or a configuration change) the repository's own startup scan is enough.
+    var wasGranted by rememberSaveable { mutableStateOf(granted) }
+    LaunchedEffect(granted) {
+        if (granted && !wasGranted) viewModel.onAudioPermissionGranted()
+        wasGranted = granted
+    }
 
     if (granted) {
         BranoShell(viewModel)

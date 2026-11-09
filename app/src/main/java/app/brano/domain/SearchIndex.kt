@@ -2,6 +2,7 @@ package app.brano.domain
 
 import app.brano.data.library.Album
 import app.brano.data.library.Artist
+import app.brano.data.library.Grouped
 import app.brano.data.library.LibraryGrouping
 import app.brano.data.library.Track
 
@@ -15,17 +16,26 @@ data class SearchResults(
     }
 }
 
-/** Precomputes normalized text once; [query] is a plain contains scan. */
-class SearchIndex(private val tracks: List<Track>) {
+/**
+ * Precomputes normalized text once; [query] is a plain contains scan. Takes the library's already
+ * grouped [albums] and [artists] so they are not grouped a second time.
+ */
+class SearchIndex(
+    private val tracks: List<Track>,
+    private val albums: List<Album>,
+    private val artists: List<Artist>,
+) {
+    constructor(tracks: List<Track>) : this(tracks, LibraryGrouping.group(tracks))
+
+    private constructor(tracks: List<Track>, g: Grouped) : this(tracks, g.albums, g.artists)
+
     private val trackKeys: Array<String> = Array(tracks.size) { i ->
         val t = tracks[i]
         Normalizer.normalize("${t.title} ${t.artist.orEmpty()} ${t.album.orEmpty()}")
     }
-    private val albums: List<Album> = LibraryGrouping.albums(tracks)
     private val albumKeys: Array<String> = Array(albums.size) {
         Normalizer.normalize("${albums[it].title.orEmpty()} ${albums[it].artist.orEmpty()}")
     }
-    private val artists: List<Artist> = LibraryGrouping.artists(tracks)
     private val artistKeys: Array<String> = Array(artists.size) { Normalizer.normalize(artists[it].name.orEmpty()) }
 
     fun query(q: String): SearchResults {

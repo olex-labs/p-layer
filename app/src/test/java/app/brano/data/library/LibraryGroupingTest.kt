@@ -1,5 +1,6 @@
 package app.brano.data.library
 
+import app.brano.domain.Normalizer
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -74,5 +75,20 @@ class LibraryGroupingTest {
         val albums = LibraryGrouping.albums(tracks)
         val artist = LibraryGrouping.artists(tracks).first { it.id == 1L }
         assertThat(LibraryGrouping.albumsOf(artist, albums).map { it.id }).containsExactly(11L, 10L).inOrder()
+    }
+
+    @Test fun group_normalizesEachDistinctStringOnce() {
+        val tracks = (1..60).map {
+            t(
+                it.toLong(), title = "Brano ${it % 50}", album = "Album ${it % 5}", albumId = (it % 5).toLong(),
+                artist = "Artista ${it % 3}", artistId = (it % 3).toLong(), folder = "/sdcard/Music/D${it % 4}",
+            )
+        }
+        val calls = ArrayList<String>()
+        val g = LibraryGrouping.group(tracks) { s -> calls += s; Normalizer.normalize(s) }
+        assertThat(calls).containsNoDuplicates()
+        assertThat(g.albums).isEqualTo(LibraryGrouping.albums(tracks))
+        assertThat(g.artists).isEqualTo(LibraryGrouping.artists(tracks))
+        assertThat(g.folders).isEqualTo(LibraryGrouping.folderTree(tracks))
     }
 }

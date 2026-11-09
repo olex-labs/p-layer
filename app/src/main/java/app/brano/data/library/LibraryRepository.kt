@@ -2,7 +2,9 @@ package app.brano.data.library
 
 import app.brano.domain.SearchIndex
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LibraryRepository(
@@ -26,6 +29,8 @@ class LibraryRepository(
     excludedFolders: Flow<Set<String>>,
     minDurationMs: Flow<Long>,
     scope: CoroutineScope,
+    /** Filtering, grouping and indexing run here, never on the caller's (often Main) dispatcher. */
+    private val compute: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private class Settings(val excluded: Set<String>, val minDurationMs: Long)
     private class Lookup(val byId: Map<Long, Track>, val byPath: Map<String, Track>)
@@ -49,11 +54,14 @@ class LibraryRepository(
     private val mutex = Mutex()
     @Volatile private var freshPublished = false
 
+    /** True once anything (snapshot or scan) was published; until then an equal list is still published. */
+    @Volatile private var published = false
+
     init {
         scope.launch {
             // Snapshot first, but never overwrite data already published by a faster refresh.
             snapshotStore.load()?.let { snapshot ->
-                mutex.withLock { if (!freshPublished) publish(snapshot) }
+                withContext(compute) { mutex.withLock { if (!freshPublished) publish(snapshot) } }
             }
         }
         scope.launch {
@@ -70,16 +78,20 @@ class LibraryRepository(
 
     fun trackByPath(path: String): Track? = lookup.byPath[path]
 
-    suspend fun refresh() {
+    suspend fun refresh() = withContext(compute) {
         settings.filterNotNull().first()
         mutex.withLock {
-            val current = settings.value ?: return
+            val current = settings.value ?: return@withLock
             _isLoading.value = true
             try {
                 val filtered = LibraryFilter.apply(source.loadAll(), current.minDurationMs, current.excluded)
                 freshPublished = true
-                publish(filtered)
-                snapshotStore.save(filtered)
+                // Unchanged (e.g. the scan matches the snapshot, or a burst of MediaStore changes):
+                // nothing to regroup, re-index or rewrite.
+                if (!published || filtered != _tracks.value) {
+                    publish(filtered)
+                    snapshotStore.save(filtered)
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -90,12 +102,15 @@ class LibraryRepository(
         }
     }
 
+    /** Tracks (and the id/path lookup) first so the song list shows at once; then the derived views. */
     private fun publish(list: List<Track>) {
         lookup = Lookup(list.associateBy { it.id }, list.associateBy { it.path })
-        _albums.value = LibraryGrouping.albums(list)
-        _artists.value = LibraryGrouping.artists(list)
-        _folders.value = LibraryGrouping.folderTree(list)
-        _search.value = SearchIndex(list)
         _tracks.value = list
+        published = true
+        val g = LibraryGrouping.group(list)
+        _albums.value = g.albums
+        _artists.value = g.artists
+        _folders.value = g.folders
+        _search.value = SearchIndex(list, g.albums, g.artists)
     }
 }

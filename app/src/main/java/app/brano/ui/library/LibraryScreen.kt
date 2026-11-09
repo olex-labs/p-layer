@@ -1,6 +1,7 @@
 package app.brano.ui.library
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -118,6 +119,8 @@ fun LibraryScreen(
     val currentId by viewModel.currentId.collectAsStateWithLifecycle()
     val selection = rememberSelectionState()
     val pager = rememberPagerState { 4 }
+    // "Library visible" for startup measurements (am start -W / Play vitals report time to full display).
+    ReportDrawnWhen { tracks.isNotEmpty() }
     val scope = rememberCoroutineScope()
     LaunchedEffect(pager.currentPage) { selection.clear() }
     // The first read may not have started yet: do not flash the empty state during cold start.

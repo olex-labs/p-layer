@@ -3,13 +3,16 @@ package app.brano.data.library
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -26,14 +29,15 @@ class LibraryRepositoryTest {
         override fun changes(): Flow<Unit> = changes
     }
 
-    private fun store() = LibrarySnapshotStore(tmp.newFile("library.json"), Dispatchers.Unconfined)
+    private fun store() = LibrarySnapshotStore(tmp.newFile("library.json"), Dispatchers.Unconfined, SnapshotLog.None)
 
     private fun TestScope.repo(
         source: TrackSource,
         store: LibrarySnapshotStore,
         excluded: Flow<Set<String>> = MutableStateFlow(emptySet()),
         min: Flow<Long> = MutableStateFlow(30_000L),
-    ) = LibraryRepository(source, store, excluded, min, CoroutineScope(UnconfinedTestDispatcher(testScheduler)))
+        compute: CoroutineDispatcher = UnconfinedTestDispatcher(testScheduler),
+    ) = LibraryRepository(source, store, excluded, min, CoroutineScope(UnconfinedTestDispatcher(testScheduler)), compute)
 
     @Test fun repository_emitsFreshFilteredAndPersistsSnapshot() = runTest {
         val store = store()
@@ -98,7 +102,7 @@ class LibraryRepositoryTest {
     @Test fun repository_staleSnapshotNeverOverwritesFresh() = runTest {
         val gate = CompletableDeferred<Unit>()
         val file = tmp.newFile("slow.json")
-        val slowStore = object : LibrarySnapshotStore(file, Dispatchers.Unconfined) {
+        val slowStore = object : LibrarySnapshotStore(file, Dispatchers.Unconfined, SnapshotLog.None) {
             override suspend fun load(): List<Track>? {
                 gate.await()
                 return listOf(t(1, title = "Old"))
@@ -131,5 +135,46 @@ class LibraryRepositoryTest {
         recovered = true
         source.changes.emit(Unit)
         assertThat(repo.tracks.value.map { it.id }).containsExactly(2L)
+    }
+
+    @Test fun repository_doesItsWorkOnTheComputeDispatcher() = runTest {
+        // Filtering, grouping and indexing must not run on the caller's (Main) dispatcher.
+        val compute = StandardTestDispatcher(testScheduler)
+        val repo = repo(FakeSource(listOf(t(1))), store(), compute = compute)
+        assertThat(repo.tracks.value).isEmpty()
+        advanceUntilIdle()
+        assertThat(repo.tracks.value.map { it.id }).containsExactly(1L)
+    }
+
+    @Test fun repository_unchangedRefreshSkipsPublishAndSave() = runTest {
+        var saves = 0
+        val counting = object : LibrarySnapshotStore(tmp.newFile("count.json"), Dispatchers.Unconfined, SnapshotLog.None) {
+            override suspend fun save(tracks: List<Track>) {
+                saves++
+                super.save(tracks)
+            }
+        }
+        val repo = repo(FakeSource(listOf(t(1), t(2))), counting)
+        val albums = repo.albums.value
+        assertThat(saves).isEqualTo(1)
+        repo.refresh()
+        repo.refresh()
+        assertThat(saves).isEqualTo(1)
+        assertThat(repo.albums.value).isSameInstanceAs(albums)
+    }
+
+    @Test fun repository_publishesTheSnapshotThenSkipsAnIdenticalScan() = runTest {
+        var saves = 0
+        val store = object : LibrarySnapshotStore(tmp.newFile("same.json"), Dispatchers.Unconfined, SnapshotLog.None) {
+            override suspend fun save(tracks: List<Track>) {
+                saves++
+                super.save(tracks)
+            }
+        }
+        store.save(listOf(t(1)))
+        saves = 0
+        val repo = repo(FakeSource(listOf(t(1))), store)
+        assertThat(repo.tracks.value.map { it.id }).containsExactly(1L)
+        assertThat(saves).isEqualTo(0) // the scan matched the snapshot: nothing rewritten
     }
 }

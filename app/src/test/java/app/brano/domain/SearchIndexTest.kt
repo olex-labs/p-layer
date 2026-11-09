@@ -36,4 +36,13 @@ class SearchIndexTest {
         val ms = measureTimeMillis { idx.query("song 99") }
         assertThat(ms).isLessThan(10)
     }
+
+    @Test fun usesTheAlbumsAndArtistsItIsGiven() {
+        val tracks = listOf(t(1, title = "Volare", album = "Nel blu", artist = "Modugno"))
+        val albums = app.brano.data.library.LibraryGrouping.albums(tracks)
+        val artists = app.brano.data.library.LibraryGrouping.artists(tracks)
+        val r = SearchIndex(tracks, albums, artists).query("modugno")
+        assertThat(r.albums.single()).isSameInstanceAs(albums.single())
+        assertThat(r.artists.single()).isSameInstanceAs(artists.single())
+    }
 }
