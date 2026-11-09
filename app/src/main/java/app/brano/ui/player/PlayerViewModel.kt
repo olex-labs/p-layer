@@ -72,7 +72,12 @@ class PlayerViewModel internal constructor(
         .map { it.current?.albumId }
         .distinctUntilChanged()
         .mapLatest { albumId -> albumId?.let { seeds.seedFor(it) } }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        // Start from the cached seed so reopening the player shows the album colors at once.
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            controller.state.value.current?.albumId?.let(seeds::cachedSeed),
+        )
 
     fun toggleFavorite() {
         val track = controller.state.value.current ?: return

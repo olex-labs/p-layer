@@ -39,6 +39,7 @@ import androidx.media3.common.Player
 import app.brano.R
 import app.brano.playback.SleepTimerState
 import android.app.Activity
+import android.os.Build
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -296,7 +297,6 @@ private fun SwipeableArtwork(
         spinning = spinning,
         colors = colors,
         modifier = modifier
-            .fillMaxWidth()
             .pointerInput(Unit) {
                 var total = 0f
                 detectHorizontalDragGestures(
@@ -400,7 +400,7 @@ private fun PlayerContentTheme(colors: PlayerColors, content: @Composable () -> 
     }
 }
 
-/** The player is always dark: light status bar icons while it is shown, the previous look restored after. */
+/** The player is always dark: light system bar icons while it is shown, the previous look restored after. */
 @Composable
 private fun LightStatusBarIcons() {
     val view = LocalView.current
@@ -411,9 +411,18 @@ private fun LightStatusBarIcons() {
             onDispose {}
         } else {
             val controller = WindowCompat.getInsetsController(window, view)
-            val previous = controller.isAppearanceLightStatusBars
+            val previousStatus = controller.isAppearanceLightStatusBars
+            val previousNav = controller.isAppearanceLightNavigationBars
             controller.isAppearanceLightStatusBars = false
-            onDispose { controller.isAppearanceLightStatusBars = previous }
+            controller.isAppearanceLightNavigationBars = false
+            // No light scrim over the gradient with 3-button navigation.
+            val previousEnforced = if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced else false
+            if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
+            onDispose {
+                controller.isAppearanceLightStatusBars = previousStatus
+                controller.isAppearanceLightNavigationBars = previousNav
+                if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = previousEnforced
+            }
         }
     }
 }

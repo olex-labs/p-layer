@@ -54,6 +54,7 @@ class PlayerViewModelTest {
         }
         coEvery { seeds.seedFor(1L) } returns Color.Red
         coEvery { seeds.seedFor(2L) } returns null
+        every { seeds.cachedSeed(any()) } returns null
     }
 
     @After fun tearDown() = Dispatchers.resetMain()
@@ -121,5 +122,11 @@ class PlayerViewModelTest {
         assertThat(vm.spinDisc.value).isTrue()
         appSettings.value = AppSettings(spinDisc = false)
         assertThat(vm.spinDisc.value).isFalse()
+    }
+
+    @Test fun seedColor_startsFromTheCachedSeed() = runTest(UnconfinedTestDispatcher()) {
+        // Reopening the player must not fade from lilac: the album seed is already known.
+        every { seeds.cachedSeed(1L) } returns Color.Red
+        assertThat(vm().seedColor.value).isEqualTo(Color.Red)
     }
 }

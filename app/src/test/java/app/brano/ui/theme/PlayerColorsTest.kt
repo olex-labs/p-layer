@@ -1,6 +1,7 @@
 package app.brano.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
@@ -19,6 +20,16 @@ class PlayerColorsTest {
             .forEach { seed ->
                 val p = playerColors(seed)
                 assertThat(contrast(p.text, p.deep)).isAtLeast(4.5)
+            }
+    }
+
+    @Test
+    fun `text is readable where the glow meets the header`() {
+        // The top bar sits roughly half way between glow and deep in the radial gradient.
+        listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color(0xFF7CFC00), Color(0xFFFFC107), Color.Blue, null)
+            .forEach { seed ->
+                val p = playerColors(seed)
+                assertThat(contrast(p.text, lerp(p.deep, p.glow, 0.5f))).isAtLeast(4.5)
             }
     }
 

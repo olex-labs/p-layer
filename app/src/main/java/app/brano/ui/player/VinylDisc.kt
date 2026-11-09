@@ -48,7 +48,8 @@ fun VinylDisc(albumId: Long, spinning: Boolean, colors: PlayerColors, modifier: 
     }
     Box(
         modifier
-            .aspectRatio(1f)
+            // The largest square that fits: height first, so short layouts never stretch the disc into an oval.
+            .aspectRatio(1f, matchHeightConstraintsFirst = true)
             .border(1.dp, colors.glow.copy(alpha = 0.35f), CircleShape)
             .padding(1.dp)
             .background(colors.deep, CircleShape)
