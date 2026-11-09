@@ -156,6 +156,12 @@ class PlayerController @Inject constructor(
         c.moveMediaItem(f, t)
     }
 
+    /** Drops every queue entry of [ids] (files deleted from the phone), the playing one included. */
+    fun removeTracksFromQueue(ids: Set<Long>) = withController { c ->
+        val queueIds = List(c.mediaItemCount) { MediaItemMapper.idOf(c.getMediaItemAt(it)) }
+        QueueRemoval.indicesToRemove(queueIds, ids).forEach(c::removeMediaItem)
+    }
+
     fun removeFromQueue(index: Int) = withController { c ->
         timelineIndices.getOrNull(index)?.let(c::removeMediaItem)
     }

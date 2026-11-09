@@ -133,4 +133,6 @@
     <string name="settings_hidden_empty">Nessun brano nascosto</string>
     <string name="action_unhide">Mostra</string>
     <string name="action_unhide_all">Mostra tutti</string>
+    <string name="action_hide">Nascondi da Brano</string>
+    <string name="action_delete">Elimina dal telefono</string>
 </resources>

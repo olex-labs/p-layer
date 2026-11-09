@@ -50,6 +50,7 @@ fun TrackActionsSheet(
     val playlists by viewModel.playlists.collectAsStateWithLifecycle()
     var showPlaylists by remember { mutableStateOf(false) }
     var showInfo by remember { mutableStateOf(false) }
+    val deleteTracks = rememberTrackDeleter { deleted -> viewModel.onDeleted(deleted) }
 
     if (!showPlaylists && !showInfo) {
         ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -77,6 +78,16 @@ fun TrackActionsSheet(
                 }
                 if (single != null) {
                     SheetAction(AppIcons.Info, R.string.action_file_info) { showInfo = true }
+                }
+                SheetAction(AppIcons.Hide, R.string.action_hide) {
+                    viewModel.hide(tracks)
+                    onDismiss()
+                }
+                if (canDeleteFiles) {
+                    SheetAction(AppIcons.Delete, R.string.action_delete) {
+                        deleteTracks(tracks)
+                        onDismiss()
+                    }
                 }
             }
         }
