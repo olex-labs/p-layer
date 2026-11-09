@@ -111,4 +111,21 @@
     <string name="sleep_end_of_track">A fine brano</string>
     <string name="sleep_cancel">Annulla timer</string>
     <string name="sleep_start">Avvia</string>
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_theme">Tema</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_light">Chiaro</string>
+    <string name="theme_dark">Scuro</string>
+    <string name="settings_amoled">Nero AMOLED</string>
+    <string name="settings_amoled_hint">Solo con tema scuro</string>
+    <string name="settings_dynamic">Colori dalla copertina</string>
+    <string name="settings_min_duration">Durata minima: %1$d s</string>
+    <string name="settings_excluded">Cartelle escluse</string>
+    <string name="settings_excluded_empty">Nessuna cartella esclusa</string>
+    <string name="settings_add_excluded">Escludi una cartella</string>
+    <string name="settings_remove_excluded">Rimuovi esclusione</string>
+    <string name="settings_choose_folder">Scegli una cartella</string>
+    <string name="settings_no_folders">Nessuna cartella disponibile</string>
+    <string name="settings_rescan">Riscansiona libreria</string>
+    <string name="settings_version">Versione</string>
 </resources>

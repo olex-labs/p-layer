@@ -3,12 +3,8 @@ package app.brano.ui.navigation
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.annotation.StringRes
-import app.brano.R
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -22,7 +18,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -52,6 +47,7 @@ import app.brano.ui.player.PlayerScreen
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import app.brano.ui.search.SearchScreen
+import app.brano.ui.settings.SettingsScreen
 
 private val audioPermission =
     if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE
@@ -149,7 +145,7 @@ private fun BranoShell(viewModel: AppViewModel) {
                     onOpenSmart = { navController.navigate(Destinations.smart(it)) },
                 )
             }
-            placeholder(Destinations.SETTINGS, R.string.tab_settings)
+            composable(Destinations.SETTINGS) { SettingsScreen() }
             composable(Destinations.ALBUM, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
                 AlbumScreen(
                     albumId = it.arguments!!.getLong("id"),
@@ -186,16 +182,5 @@ private fun BranoShell(viewModel: AppViewModel) {
             }
             composable(Destinations.PLAYER) { PlayerScreen(onBack = { navController.popBackStack() }) }
         }
-    }
-}
-
-/** Trivial stand-in; replaced by the real screen in a later task. */
-private fun androidx.navigation.NavGraphBuilder.placeholder(
-    route: String,
-    @StringRes title: Int,
-    vararg args: androidx.navigation.NamedNavArgument,
-) {
-    composable(route, arguments = args.toList()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(title)) }
     }
 }
