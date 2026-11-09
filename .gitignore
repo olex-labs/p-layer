@@ -7,3 +7,4 @@ local.properties
 captures/
 .superpowers/
 docs/preview/*.apk
+docs/preview/ref/

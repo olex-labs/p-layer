@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brano vs Spotify vs Tidal</title>
+<style>
+:root{--bg:#f6f5f8;--fg:#1b1a20;--mut:#5d5b66;--card:#fff;--line:#e2e0e8;--acc:#6b4de6;--good:#1f8a4c;--warn:#b26a00;--bad:#c0392b}
+@media(prefers-color-scheme:dark){:root{--bg:#111015;--fg:#ecebf1;--mut:#a3a1ad;--card:#1b1a21;--line:#2e2c36;--acc:#a993ff;--good:#5fd08f;--warn:#f0b35a;--bad:#ff7b6b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:1060px;margin:0 auto;padding:24px 16px 64px}h1{font-size:2rem;margin:.2em 0}h2{margin:2em 0 .6em;font-size:1.3rem}
+p,li{max-width:75ch}.mut{color:var(--mut)}
+.shots{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.shots figure{margin:0}.shots figcaption{font-weight:700;margin-bottom:6px}
+.shots .row{display:flex;gap:8px}.shots img{width:50%;border-radius:14px;display:block;background:#000}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:.85rem;color:var(--mut);font-weight:600}
+td.n{text-align:center;font-weight:700;font-variant-numeric:tabular-nums;width:84px}
+.best{color:var(--good)}.low{color:var(--bad)}tr.tot td{font-size:1.1rem;border-bottom:0}
+.wrap{overflow-x:auto}
+.cards{display:grid;gap:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h3{margin:0 0 4px;font-size:1.05rem}.tag{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:99px;margin-right:6px;border:1px solid currentColor}
+.hi{color:var(--bad)}.md{color:var(--warn)}.lo{color:var(--good)}
+@media(max-width:700px){.shots{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1>Brano vs Spotify vs Tidal</h1>
+<p class="mut">Confronto del design di Brano v1.1 con le due app di riferimento. Le schermate di Spotify e Tidal sono quelle ufficiali del Play Store (solo tema scuro, immagini promozionali; copie locali in <code>ref/</code>, escluse da git). Quelle di Brano vengono dall'emulatore. Contrasto e dimensione dei tasti sono <b>misurati</b> sui pixel e sull'albero dell'interfaccia di Brano. Gli altri voti sono una <b>valutazione</b> su criteri dichiarati, non una misura.</p>
+
+<h2>Le schermate</h2>
+<div class="shots">
+ <figure><figcaption>Spotify</figcaption><div class="row">
+  <img loading="lazy" alt="Spotify, la tua libreria" src="ref/spotify-6.jpg">
+  <img loading="lazy" alt="Spotify, playlist" src="ref/spotify-3.jpg"></div></figure>
+ <figure><figcaption>Tidal</figcaption><div class="row">
+  <img loading="lazy" alt="Tidal, album" src="ref/tidal-2.jpg">
+  <img loading="lazy" alt="Tidal, player" src="ref/tidal-1.jpg"></div></figure>
+ <figure><figcaption>Brano v1.1</figcaption><div class="row">
+  <img loading="lazy" alt="Brano, libreria" src="img/01-libreria-brani.png">
+  <img loading="lazy" alt="Brano, player" src="img/10-player-album-a.png"></div></figure>
+</div>
+
+<h2>Punteggi (1–10)</h2>
+<div class="wrap"><table>
+<tr><th>Criterio</th><th>Spotify</th><th>Tidal</th><th>Brano</th><th>Perché</th></tr>
+<tr><td>Gerarchia visiva</td><td class="n">8</td><td class="n best">9</td><td class="n">7</td><td>Tidal ha un ordine di lettura limpido: copertina, titolo, Play/Shuffle, brani. In Brano il titolo enorme e le schede occupano un quarto dello schermo, e nel player il terzo inferiore resta vuoto.</td></tr>
+<tr><td>Leggibilità e contrasto</td><td class="n">8</td><td class="n">8</td><td class="n">7</td><td><b>Misurato su Brano:</b> 1 testo su 36 sotto 4,5:1, l'artista nel mini-player (3,9:1). Player: minimo 8,3:1. Spotify e Tidal hanno testi grigi piccoli, al limite.</td></tr>
+<tr><td>Uso del colore dell'album</td><td class="n">8</td><td class="n">6</td><td class="n best">9</td><td>Brano è il più deciso: luce del player, mini-player e tinta della libreria. Spotify lo usa su mini-player e intestazioni, Tidal resta quasi monocromo.</td></tr>
+<tr><td>Personalità</td><td class="n best">9</td><td class="n">8</td><td class="n">7</td><td>Il disco che gira e il titolo serif sono riconoscibili, ma la libreria sembra ancora Material standard: schede, icone di sistema, colori pastello.</td></tr>
+<tr><td>Coerenza</td><td class="n best">9</td><td class="n best">9</td><td class="n low">6</td><td>Spotify e Tidal hanno un solo mondo, scuro, ovunque. Brano passa da una libreria chiara e lilla a un player nero e caldo: sono due app diverse.</td></tr>
+<tr><td>Ergonomia (pollice)</td><td class="n best">8</td><td class="n">7</td><td class="n">7</td><td><b>Misurato su Brano:</b> 0 tasti sotto 48 dp. I comandi del player però stanno a metà schermo, con spazio vuoto sotto. Coda e menu sono in alto a destra, lontano dal pollice.</td></tr>
+<tr><td>Densità di informazioni</td><td class="n best">9</td><td class="n">7</td><td class="n low">6</td><td>Spotify mostra molto senza confusione (filtri, recenti). Brano mostra 8 brani per schermata e nessuna informazione sul file (formato, qualità), che per un lettore locale sarebbe un vantaggio.</td></tr>
+<tr><td>Velocità percepita</td><td class="n">6</td><td class="n">6</td><td class="n best">9</td><td>Brano parte in circa 0,5 s e non ha caricamenti. Le app in streaming aspettano la rete e caricano molte immagini.</td></tr>
+<tr class="tot"><td><b>Media</b></td><td class="n best">8,1</td><td class="n">7,5</td><td class="n">7,3</td><td>Brano vince su colore e velocità, e perde soprattutto su coerenza e densità: si può recuperare senza appesantire l'app.</td></tr>
+</table></div>
+
+<h2>Cosa migliorare, in ordine di impatto</h2>
+<div class="cards">
+ <div class="card"><h3><span class="tag hi">alto</span>1. Un solo mondo visivo</h3>La libreria diventa scura e calda come il player, con la tinta dell'album come luce di sfondo nell'intestazione. È il cambiamento "drastico" che dà coerenza: Brano diventa una sola app. Il tema chiaro resta come opzione. Costo per la velocità: nessuno (stessi gradienti statici).</div>
+ <div class="card"><h3><span class="tag hi">alto</span>2. Intestazioni di album e playlist come una copertina</h3>Copertina grande al centro, gradiente preso dalla copertina che sfuma nel fondo, pulsanti Riproduci e Casuale a pillola affiancati (come Tidal), riga con anno, numero di brani e durata totale.</div>
+ <div class="card"><h3><span class="tag hi">alto</span>3. Player più in basso, verso il pollice</h3>Sposta controlli e barra nella parte bassa e riempi lo spazio vuoto con una riga di azioni: preferito, coda, timer, info sul file. Il disco resta il protagonista in alto.</div>
+ <div class="card"><h3><span class="tag md">medio</span>4. Libreria più compatta</h3>Il titolo grande si riduce quando scorri, le schede diventano filtri a pillola (Brani, Album, Artisti, Cartelle) e righe un po' più basse: circa 10–11 brani per schermata invece di 8.</div>
+ <div class="card"><h3><span class="tag md">medio</span>5. Mostra la qualità del file</h3>Una piccola etichetta FLAC / MP3 · 320 kbps sui brani e nel player, come i badge di qualità di Tidal. Per un lettore di file locali è un punto di forza che le app in streaming non hanno.</div>
+ <div class="card"><h3><span class="tag md">medio</span>6. Icone proprie</h3>Le icone Material di sistema sono il segnale più "generico" rimasto. È già prevista la fase delle icone SVG con Gemini, compresa l'icona dell'app.</div>
+ <div class="card"><h3><span class="tag lo">basso</span>7. Contrasto dell'artista nel mini-player</h3>Oggi 3,9:1: basta passare l'opacità dal 70% all'85% per superare 4,5:1. Correzione di una riga.</div>
+</div>
+<p class="mut">Limiti del confronto: le schermate di Spotify e Tidal sono promozionali e solo scure; non ho misurato i loro contrasti. Le funzioni di streaming (scoperta, social, podcast) sono escluse: Brano è un lettore di file locali.</p>
+</main></body></html>
