@@ -39,4 +39,16 @@ class SettingsRepositoryTest {
         ds.edit { it[stringPreferencesKey("theme")] = "PURPLE" }
         assertThat(SettingsRepository(ds).settings.first().theme).isEqualTo(ThemeMode.SYSTEM)
     }
+
+    @Test fun spinDisc_defaultsToTrueWhenKeyMissing() = runTest {
+        val ds = dataStore("a")
+        ds.edit { it[stringPreferencesKey("theme")] = "DARK" }
+        assertThat(SettingsRepository(ds).settings.first().spinDisc).isTrue()
+    }
+
+    @Test fun spinDisc_roundTripsFalse() = runTest {
+        val repo = SettingsRepository(dataStore("a"))
+        repo.update { it.copy(spinDisc = false) }
+        assertThat(repo.settings.first().spinDisc).isFalse()
+    }
 }

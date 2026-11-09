@@ -10,6 +10,8 @@ import app.brano.data.library.t
 import app.brano.playback.PlayerController
 import app.brano.playback.PlayerUiState
 import app.brano.ui.theme.ArtworkSeedLoader
+import app.brano.data.settings.AppSettings
+import app.brano.data.settings.SettingsRepository
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -36,6 +38,8 @@ class PlayerViewModelTest {
     private val favorites = mockk<FavoritesDao>()
     private val playlists = mockk<PlaylistDao>(relaxed = true)
     private val seeds = mockk<ArtworkSeedLoader>()
+    private val appSettings = MutableStateFlow(AppSettings())
+    private val settingsRepo = mockk<SettingsRepository> { every { settings } returns appSettings }
     private val favs = MutableStateFlow<List<FavoriteEntity>>(emptyList())
 
     @Before fun setUp() {
@@ -54,7 +58,7 @@ class PlayerViewModelTest {
 
     @After fun tearDown() = Dispatchers.resetMain()
 
-    private fun vm() = PlayerViewModel(player, favorites, playlists, seeds) { 5L }
+    private fun vm() = PlayerViewModel(player, favorites, playlists, seeds, settingsRepo) { 5L }
 
     @Test fun toggleFavorite_updatesIsFavoriteForCurrentTrack() = runTest(UnconfinedTestDispatcher()) {
         val vm = vm()
@@ -109,5 +113,13 @@ class PlayerViewModelTest {
         assertThat(vm.seedColor.value).isNull()
         playerState.value = PlayerUiState()
         assertThat(vm.seedColor.value).isNull()
+    }
+
+    @Test fun spinDisc_followsSettings() = runTest(UnconfinedTestDispatcher()) {
+        val vm = vm()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.spinDisc.collect {} }
+        assertThat(vm.spinDisc.value).isTrue()
+        appSettings.value = AppSettings(spinDisc = false)
+        assertThat(vm.spinDisc.value).isFalse()
     }
 }

@@ -77,6 +77,11 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 headlineContent = { Text(stringResource(R.string.settings_dynamic)) },
                 trailingContent = { Switch(checked = settings.dynamicColor, onCheckedChange = viewModel::setDynamicColor) },
             )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_spin_disc)) },
+                supportingContent = { Text(stringResource(R.string.settings_spin_disc_hint)) },
+                trailingContent = { Switch(checked = settings.spinDisc, onCheckedChange = viewModel::setSpinDisc) },
+            )
             HorizontalDivider()
             Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Text(stringResource(R.string.settings_min_duration, sliderSec.roundToInt()), style = MaterialTheme.typography.bodyLarge)

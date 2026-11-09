@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import app.brano.data.settings.SettingsRepository
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -29,6 +30,7 @@ class PlayerViewModel internal constructor(
     private val favorites: FavoritesDao,
     private val playlists: PlaylistDao,
     seeds: ArtworkSeedLoader,
+    settings: SettingsRepository,
     private val now: () -> Long,
 ) : ViewModel() {
 
@@ -38,7 +40,8 @@ class PlayerViewModel internal constructor(
         favorites: FavoritesDao,
         playlists: PlaylistDao,
         seeds: ArtworkSeedLoader,
-    ) : this(controller, favorites, playlists, seeds, System::currentTimeMillis)
+        settings: SettingsRepository,
+    ) : this(controller, favorites, playlists, seeds, settings, System::currentTimeMillis)
 
     /** Everything except the position, so the 500 ms position ticks do not recompose the screen. */
     val state: StateFlow<PlayerUiState> = controller.state
@@ -51,6 +54,12 @@ class PlayerViewModel internal constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0L)
 
     val errors: SharedFlow<String> = controller.errors
+
+    /** Whether the vinyl cover turns while playing ("Disco che gira" setting). */
+    val spinDisc: StateFlow<Boolean> = settings.settings
+        .map { it.spinDisc }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
     /** By id, then by path (the id changes when MediaStore re-indexes the same file). */
     val isFavorite: StateFlow<Boolean> = combine(
