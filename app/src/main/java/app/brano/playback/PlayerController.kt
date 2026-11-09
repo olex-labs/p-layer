@@ -68,8 +68,6 @@ class PlayerController @Inject constructor(
     /** Timeline index in the controller for each entry of [PlayerUiState.queue]. */
     private var timelineIndices: List<Int> = emptyList()
 
-    /** Media ids in the order before shuffle was turned on in this process; null when unknown. */
-    private var unshuffledIds: List<String>? = null
     private val random = Random.Default
 
     init {
@@ -126,15 +124,9 @@ class PlayerController @Inject constructor(
         withController { c -> start(c, tracks, random.nextInt(tracks.size), shuffle = true) }
     }
 
+    /** The service shuffles a new list itself when shuffle is (or is then turned) on. */
     private fun start(c: MediaController, tracks: List<Track>, startIndex: Int, shuffle: Boolean) {
-        val items = tracks.map(MediaItemMapper::toMediaItem)
-        if (shuffle) {
-            unshuffledIds = items.map { it.mediaId }
-            c.setMediaItems(QueueShuffle.shuffledFrom(items, startIndex, random), 0, 0L)
-        } else {
-            unshuffledIds = null
-            c.setMediaItems(items, startIndex, 0L)
-        }
+        c.setMediaItems(tracks.map(MediaItemMapper::toMediaItem), startIndex, 0L)
         c.shuffleModeEnabled = shuffle
         c.prepare()
         c.play()
@@ -186,41 +178,8 @@ class PlayerController @Inject constructor(
         _state.update { it.copy(positionMs = ms) }
     }
 
-    /**
-     * Shuffle reorders the queue itself: on, every other item moves after the current one in random
-     * order; off, the order from before shuffling comes back (when known in this process), with
-     * items added meanwhile at the end. The player's shuffle flag only records the mode, since the
-     * service uses an identity shuffle order.
-     */
-    fun setShuffle(on: Boolean) = withController { c ->
-        if (on == c.shuffleModeEnabled) return@withController
-        val cur = c.currentMediaItemIndex
-        val items = List(c.mediaItemCount) { c.getMediaItemAt(it) }
-        if (cur in items.indices) {
-            if (on) {
-                unshuffledIds = items.map { it.mediaId }
-                rearrange(c, QueueShuffle.shuffledFrom(items, cur, random), 0)
-            } else {
-                unshuffledIds?.let { original ->
-                    val (ids, index) = QueueShuffle.restore(items.map { it.mediaId }, cur, original)
-                    val byId = items.associateBy { it.mediaId }
-                    rearrange(c, ids.map { byId.getValue(it) }, index)
-                }
-            }
-        }
-        if (!on) unshuffledIds = null
-        c.shuffleModeEnabled = on
-    }
-
-    /** Replaces everything around the current item so the queue becomes [order], with the current at [currentAt]. */
-    private fun rearrange(c: MediaController, order: List<MediaItem>, currentAt: Int) {
-        val cur = c.currentMediaItemIndex
-        if (cur < 0 || currentAt !in order.indices) return
-        if (cur + 1 < c.mediaItemCount) c.removeMediaItems(cur + 1, c.mediaItemCount)
-        if (cur > 0) c.removeMediaItems(0, cur)
-        if (currentAt > 0) c.addMediaItems(0, order.subList(0, currentAt))
-        if (currentAt < order.lastIndex) c.addMediaItems(order.subList(currentAt + 1, order.size))
-    }
+    /** Shuffle on or off; the service reorders the queue (see ShufflingPlayer). */
+    fun setShuffle(on: Boolean) = withController { c -> c.shuffleModeEnabled = on }
 
     fun cycleRepeat() = withController { c ->
         c.repeatMode = when (c.repeatMode) {

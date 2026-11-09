@@ -63,4 +63,16 @@ class QueueStateStoreTest {
         assertThat(state(listOf(1, 2), 0).restore { null }).isNull()
         assertThat(state(emptyList(), 0).restore { lib[it] }).isNull()
     }
+
+    @Test fun queue_unshuffledOrder_roundTrips() = runTest {
+        val store = store()
+        store.save(state(listOf(3, 1, 2), 0).copy(unshuffledIds = listOf(1, 2, 3)))
+        assertThat(store.load()!!.unshuffledIds).containsExactly(1L, 2L, 3L).inOrder()
+    }
+
+    @Test fun queue_withoutShuffleOrder_loadsNull() = runTest {
+        val store = store()
+        store.save(state(listOf(1, 2), 0).copy(unshuffledIds = null))
+        assertThat(store.load()!!.unshuffledIds).isNull()
+    }
 }

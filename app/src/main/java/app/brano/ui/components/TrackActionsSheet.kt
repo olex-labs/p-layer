@@ -65,7 +65,7 @@ fun TrackActionsSheet(
                     }
                 }
                 SheetAction(AppIcons.PlaylistAdd, R.string.action_add_to_playlist) { showPlaylists = true }
-                if (single != null) {
+                if (single != null && viewModel.isInLibrary(single)) {
                     SheetAction(AppIcons.Album, R.string.action_go_to_album) {
                         onGoToAlbum(single.albumId)
                         onDismiss()
@@ -74,6 +74,8 @@ fun TrackActionsSheet(
                         onGoToArtist(single.artistId)
                         onDismiss()
                     }
+                }
+                if (single != null) {
                     SheetAction(AppIcons.Info, R.string.action_file_info) { showInfo = true }
                 }
             }
