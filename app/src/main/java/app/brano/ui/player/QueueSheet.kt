@@ -44,6 +44,24 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 /** Stable key per queue entry, also across moves and removals (duplicates get a counter). */
+/** Decides when local rows may be rebuilt from the real queue: not while dragging, and after a drop only once the queue differs from the one the move started from. */
+internal class RowSyncGate<T> {
+    private var staleBase: T? = null
+    private var hasBase = false
+
+    fun dropped(queueAtDrop: T) { staleBase = queueAtDrop; hasBase = true }
+
+    fun shouldApply(queue: T, dragging: Boolean): Boolean {
+        if (dragging) return false
+        if (hasBase) {
+            if (queue == staleBase) return false
+            hasBase = false
+            staleBase = null
+        }
+        return true
+    }
+}
+
 private data class QueueRow(val key: String, val track: Track)
 
 private fun toRows(queue: List<Track>): List<QueueRow> {
@@ -70,7 +88,8 @@ fun QueueSheet(
     var dragging by remember { mutableStateOf(false) }
     var dragStartIndex by remember { mutableStateOf(-1) }
     var currentKey by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(queue, dragging) { if (!dragging) rows = toRows(queue) }
+    val gate = remember { RowSyncGate<List<Track>>() }
+    LaunchedEffect(queue, dragging) { if (gate.shouldApply(queue, dragging)) rows = toRows(queue) }
     // The highlight follows the entry itself while it is being dragged.
     LaunchedEffect(rows, currentIndex, dragging) { if (!dragging) currentKey = rows.getOrNull(currentIndex)?.key }
 
@@ -120,7 +139,10 @@ fun QueueSheet(
                                             val from = dragStartIndex
                                             dragging = false
                                             dragStartIndex = -1
-                                            if (from >= 0 && to >= 0 && from != to) onMove(from, to)
+                                            if (from >= 0 && to >= 0 && from != to) {
+                                                gate.dropped(queue)
+                                                onMove(from, to)
+                                            }
                                         },
                                     ),
                                     onClick = {},
