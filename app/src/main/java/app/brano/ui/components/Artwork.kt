@@ -4,7 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Shape
+import app.brano.ui.theme.CoverShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -20,10 +21,10 @@ fun albumArtUri(albumId: Long) = "content://media/external/audio/albumart/$album
 
 /** Album art; the music-note icon shows behind the image while loading and when there is none. */
 @Composable
-fun Artwork(albumId: Long, modifier: Modifier = Modifier) {
+fun Artwork(albumId: Long, modifier: Modifier = Modifier, shape: Shape = CoverShape) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center,
     ) {
