@@ -107,6 +107,7 @@ class PlaybackService : MediaSessionService() {
         )
         playCountTracker = PlayCountTracker(::recordPlay)
         widget = WidgetUpdater.create(this, scope, seeds)
+        WidgetUpdater.liveRefresh = { pushWidget(force = true) }
         player.addListener(playerListener)
 
         val activityIntent = PendingIntent.getActivity(
@@ -119,8 +120,7 @@ class PlaybackService : MediaSessionService() {
             .build()
 
         restoreJob = scope.launch {
-            restoreQueue()
-            pushWidget()
+            if (restoreQueue() || player.mediaItemCount > 0) pushWidget()
         }
         scope.launch { sleepTimer.state.collect { session.setSessionExtras(it.toBundle()) } }
         scope.launch { progressLoop() }
@@ -135,6 +135,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        WidgetUpdater.liveRefresh = null
         saveState()
         player.removeListener(playerListener)
         session.release()
@@ -143,20 +144,25 @@ class PlaybackService : MediaSessionService() {
         super.onDestroy()
     }
 
-    private fun pushWidget() {
+    private fun pushWidget(force: Boolean = false) {
         val track = player.currentMediaItem?.let(MediaItemMapper::toTrackOrNull)
-        widget.update(WidgetState.of(track, player.isPlaying))
+        val state = WidgetState.of(track, player.isPlaying)
+        if (force) widget.refresh(state) else widget.update(state)
     }
 
-    private suspend fun restoreQueue() {
-        val saved = queueStateStore.load() ?: return
+    /**
+     * Puts the saved queue back, paused. False only when the library did not load in time: the
+     * outcome is unknown, so the widget keeps showing the last track instead of the empty state.
+     */
+    private suspend fun restoreQueue(): Boolean {
+        val saved = queueStateStore.load() ?: return true
         withTimeoutOrNull(RESTORE_TIMEOUT_MS) { libraryRepository.tracks.first { it.isNotEmpty() } }
-            ?: return
-        if (player.mediaItemCount > 0) return // a controller already started something
+            ?: return false
+        if (player.mediaItemCount > 0) return true // a controller already started something
         val restored = withContext(Dispatchers.IO) {
             saved.restore(onlyExisting(libraryRepository::trackById) { File(it).exists() })
-        } ?: return
-        if (player.mediaItemCount > 0) return // started while checking the files
+        } ?: return true
+        if (player.mediaItemCount > 0) return true // started while checking the files
         player.repeatMode = saved.repeatMode
         player.setMediaItems(
             restored.tracks.map(MediaItemMapper::toMediaItem),
@@ -166,6 +172,7 @@ class PlaybackService : MediaSessionService() {
         shufflingPlayer.restoreShuffle(saved.shuffle, saved.unshuffledIds?.map(Long::toString))
         player.playWhenReady = false
         player.prepare()
+        return true
     }
 
     private suspend fun progressLoop() {
@@ -297,7 +304,9 @@ class PlaybackService : MediaSessionService() {
             val result = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
             scope.launch {
                 restoreJob.join()
-                if (player.mediaItemCount > 0) shufflingPlayer.keepOrderOnce()
+                if (player.mediaItemCount > 0) {
+                    shufflingPlayer.keepOrderOnce(List(player.mediaItemCount) { player.getMediaItemAt(it).mediaId })
+                }
                 result.set(PlaybackResumption.of(player))
             }
             return result

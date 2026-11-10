@@ -147,5 +147,5 @@
     <string name="cd_widget_play">Riproduci</string>
     <string name="cd_widget_pause">Pausa</string>
     <string name="cd_widget_next">Brano successivo</string>
-    <string name="settings_folder_no_lrc_access">Cartella aggiunta, ma Android non ha concesso l'accesso: i file .lrc di questa cartella non saranno letti.</string>
+    <string name="settings_folder_no_lrc_access">Cartella aggiunta, ma Android non ha concesso l\'accesso: i file .lrc di questa cartella non saranno letti.</string>
 </resources>
