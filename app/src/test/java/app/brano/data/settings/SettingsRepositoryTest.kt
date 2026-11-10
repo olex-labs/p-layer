@@ -58,4 +58,24 @@ class SettingsRepositoryTest {
         repo.update { it.copy(onlineLyrics = true) }
         assertThat(repo.settings.first().onlineLyrics).isTrue()
     }
+
+    @Test fun defaults_eqOffAndReplayGainOn() = runTest {
+        val s = SettingsRepository(dataStore("eq")).settings.first()
+        assertThat(s.eqPreset).isEqualTo(app.brano.playback.eq.EqPreset.OFF)
+        assertThat(s.replayGain).isTrue()
+    }
+
+    @Test fun eqPreset_roundTrip() = runTest {
+        val repo = SettingsRepository(dataStore("eq"))
+        repo.update { it.copy(eqPreset = app.brano.playback.eq.EqPreset.ROCK, replayGain = false) }
+        val s = repo.settings.first()
+        assertThat(s.eqPreset).isEqualTo(app.brano.playback.eq.EqPreset.ROCK)
+        assertThat(s.replayGain).isFalse()
+    }
+
+    @Test fun unknownStoredPreset_isOff() = runTest {
+        val ds = dataStore("eq")
+        ds.edit { it[stringPreferencesKey("eq_preset")] = "LOUD" }
+        assertThat(SettingsRepository(ds).settings.first().eqPreset).isEqualTo(app.brano.playback.eq.EqPreset.OFF)
+    }
 }
