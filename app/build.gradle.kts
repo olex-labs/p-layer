@@ -14,11 +14,11 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "app.brano"
+        applicationId = "io.github.olexlabs.player"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.8"
+        versionCode = 9
+        versionName = "1.9"
         testInstrumentationRunner = "app.brano.HiltTestRunner"
     }
 

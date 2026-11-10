@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Brano"
+rootProject.name = "P-layer"
 include(":app")
