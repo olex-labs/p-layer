@@ -1,0 +1,79 @@
+package app.brano.widget
+
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Context
+import android.graphics.Bitmap
+import android.util.Log
+import androidx.compose.ui.graphics.toArgb
+import app.brano.ui.theme.ArtworkSeedLoader
+import app.brano.ui.theme.playerColors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+
+/**
+ * Keeps the home screen widget in step with playback. Pushes only when the state changes, does no
+ * work when no widget is placed, and lets the latest track win when covers load out of order.
+ * Failures are logged and never reach the playback service.
+ */
+class WidgetUpdater(
+    private val scope: CoroutineScope,
+    private val widgetIds: () -> IntArray,
+    private val push: (WidgetState, Bitmap?, Int) -> Unit,
+    private val save: (WidgetState) -> Unit,
+    private val cover: suspend (Long) -> Bitmap?,
+    private val background: suspend (Long) -> Int,
+    private val log: (Throwable) -> Unit = { Log.w(TAG, "Widget update failed", it) },
+) {
+    private var last: WidgetState? = null
+    private var job: Job? = null
+
+    // Cover and colour of the album shown last, so play/pause does not reload them.
+    private var shownAlbum: Long? = null
+    private var shownCover: Bitmap? = null
+    private var shownBackground = DEFAULT_WIDGET_BG
+
+    fun update(s: WidgetState) {
+        runCatching { save(s) }.onFailure(log)
+        if (s == last) return
+        val ids = runCatching { widgetIds() }.onFailure(log).getOrNull() ?: return
+        if (ids.isEmpty()) return
+        last = s
+        job?.cancel()
+        job = scope.launch {
+            try {
+                val album = s.albumId
+                if (album != shownAlbum) {
+                    shownCover = album?.let { cover(it) }
+                    shownBackground = album?.let { background(it) } ?: DEFAULT_WIDGET_BG
+                    shownAlbum = album
+                }
+                push(s, shownCover, shownBackground)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                log(e)
+            }
+        }
+    }
+
+    companion object {
+        private const val TAG = "BranoWidget"
+
+        fun create(context: Context, scope: CoroutineScope, seeds: ArtworkSeedLoader): WidgetUpdater {
+            val app = context.applicationContext
+            val manager = AppWidgetManager.getInstance(app)
+            val provider = ComponentName(app, BranoWidgetProvider::class.java)
+            val store = WidgetStateStore(app)
+            return WidgetUpdater(
+                scope = scope,
+                widgetIds = { manager.getAppWidgetIds(provider) },
+                push = { s, bmp, bg -> manager.updateAppWidget(provider, WidgetRenderer.render(app, s, bmp, bg)) },
+                save = store::save,
+                cover = { loadWidgetCover(app, it) },
+                background = { album -> seeds.seedFor(album)?.let { playerColors(it).deep.toArgb() } ?: DEFAULT_WIDGET_BG },
+            )
+        }
+    }
+}
