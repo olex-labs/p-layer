@@ -1,4 +1,4 @@
-﻿"""Turns design/icons/*.svg into app/.../ui/icons/AppIcons.kt (Compose ImageVectors, built lazily)
+"""Turns design/icons/*.svg into app/.../ui/icons/AppIcons.kt (Compose ImageVectors, built lazily)
 and design/launcher/*.svg into Android vector drawables plus the adaptive launcher icon.
 
 Run from the project root after editing any SVG:  python -I design/to_android.py
@@ -157,15 +157,18 @@ def argb(c, opacity=1.0):
     return f'#{round(opacity * 255):02X}{c}'
 
 
-def vector_drawable(svg_name, size):
+def vector_drawable(svg_name, size, folder=LAUNCHER, current='#FFFFFF'):
     out = []
-    for s in shapes(os.path.join(LAUNCHER, svg_name)):
+    for s in shapes(os.path.join(folder, svg_name)):
+        for k in ('fill', 'stroke'):
+            if s[k] == 'currentColor':
+                s[k] = current
         attrs = [f'android:pathData="{s["d"]}"']
         if s['stroke']:
             attrs += [f'android:strokeColor="{argb(s["stroke"], s["stroke_opacity"])}"',
                       f'android:strokeWidth="{n(s["width"])}"']
             if s.get('round'):
-                attrs.append('android:strokeLineCap="round"')
+                attrs += ['android:strokeLineCap="round"', 'android:strokeLineJoin="round"']
         elif s['fill'] and s['fill'].startswith('url('):
             attrs.append('android:fillColor="@android:color/transparent"')
         elif s['fill']:
@@ -216,6 +219,10 @@ def main():
     write(os.path.join(drawable, 'ic_launcher_monochrome.xml'), vector_drawable('launcher_monochrome.svg', 108))
     # Same name as Media3's default small icon, so the playback notification uses Brano's.
     write(os.path.join(drawable, 'media3_notification_small_icon.xml'), vector_drawable('notification.svg', 24))
+    # Home screen widget buttons: the app's own icons, white.
+    for icon, res in (('Play', 'play'), ('Pause', 'pause'), ('SkipNext', 'skip_next'),
+                      ('SkipPrevious', 'skip_previous'), ('MusicNote', 'music_note')):
+        write(os.path.join(drawable, f'ic_widget_{res}.xml'), vector_drawable(f'{icon}.svg', 24, ICONS))
     for name in ('ic_launcher.xml', 'ic_launcher_round.xml'):
         write(os.path.join(RES, 'mipmap-anydpi-v26', name), ADAPTIVE)
     print('ok')

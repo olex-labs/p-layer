@@ -8,11 +8,13 @@
     <path android:pathData="M37.91 67.50A21 21 0 0 1 59.44 33.72"
         android:strokeColor="#FFB9A6FF"
         android:strokeWidth="4"
-        android:strokeLineCap="round" />
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
     <path android:pathData="M70.09 40.50A21 21 0 0 1 61.18 73.73"
         android:strokeColor="#FFB9A6FF"
         android:strokeWidth="4"
-        android:strokeLineCap="round" />
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
     <path android:pathData="M42.5 54a11.5 11.5 0 1 0 23 0a11.5 11.5 0 1 0 -23 0z"
         android:fillColor="#FF14101F" />
     <path android:pathData="M48.07 58.04a2.94 2.94 0 1 0 5.88 0a2.94 2.94 0 1 0 -5.88 0z"
