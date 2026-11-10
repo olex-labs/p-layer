@@ -24,13 +24,18 @@ import app.brano.data.settings.QueueState
 import app.brano.data.settings.QueueStateStore
 import app.brano.data.settings.restore
 import app.brano.di.ApplicationScope
+import app.brano.ui.theme.ArtworkSeedLoader
+import app.brano.widget.WidgetState
+import app.brano.widget.WidgetUpdater
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.SettableFuture
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -46,6 +51,13 @@ class PlaybackService : MediaSessionService() {
     @Inject lateinit var queueStateStore: QueueStateStore
     @Inject lateinit var playStatsDao: PlayStatsDao
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
+    @Inject lateinit var seeds: ArtworkSeedLoader
+
+    /** Home screen widget; does nothing when no widget is placed. */
+    private lateinit var widget: WidgetUpdater
+
+    /** Restoring the saved queue at start; playback resumption waits for it. */
+    private lateinit var restoreJob: Job
 
     private val scope = CoroutineScope(
         SupervisorJob() + Dispatchers.Main.immediate +
@@ -91,6 +103,7 @@ class PlaybackService : MediaSessionService() {
             onExpire = { player.pause() },
         )
         playCountTracker = PlayCountTracker(::recordPlay)
+        widget = WidgetUpdater.create(this, scope, seeds)
         player.addListener(playerListener)
 
         val activityIntent = PendingIntent.getActivity(
@@ -102,7 +115,10 @@ class PlaybackService : MediaSessionService() {
             .setSessionActivity(activityIntent)
             .build()
 
-        scope.launch { restoreQueue() }
+        restoreJob = scope.launch {
+            restoreQueue()
+            pushWidget()
+        }
         scope.launch { sleepTimer.state.collect { session.setSessionExtras(it.toBundle()) } }
         scope.launch { progressLoop() }
         scope.launch { periodicSaveLoop() }
@@ -122,6 +138,11 @@ class PlaybackService : MediaSessionService() {
         player.release()
         scope.cancel()
         super.onDestroy()
+    }
+
+    private fun pushWidget() {
+        val track = player.currentMediaItem?.let(MediaItemMapper::toTrackOrNull)
+        widget.update(WidgetState.of(track, player.isPlaying))
     }
 
     private suspend fun restoreQueue() {
@@ -190,6 +211,7 @@ class PlaybackService : MediaSessionService() {
             }
             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) consecutiveErrors = 0 // the user picked a track
             mediaItem?.let { playCountTracker.onTrackStarted(MediaItemMapper.idOf(it)) }
+            pushWidget()
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -198,6 +220,7 @@ class PlaybackService : MediaSessionService() {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             if (isPlaying) consecutiveErrors = 0 else saveState()
+            pushWidget()
         }
 
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
@@ -254,6 +277,34 @@ class PlaybackService : MediaSessionService() {
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                 .setAvailableSessionCommands(commands)
                 .build()
+        }
+
+        /**
+         * Play from the widget or a headset while the service was off: Media3 asks for something to
+         * play. Waits for the saved queue to be restored and hands it back unchanged (order, track,
+         * position); an empty list when there is nothing to resume.
+         */
+        override fun onPlaybackResumption(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+            val result = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
+            scope.launch {
+                restoreJob.join()
+                if (player.mediaItemCount == 0) {
+                    result.set(MediaSession.MediaItemsWithStartPosition(emptyList(), 0, 0))
+                } else {
+                    shufflingPlayer.keepOrderOnce()
+                    result.set(
+                        MediaSession.MediaItemsWithStartPosition(
+                            List(player.mediaItemCount) { player.getMediaItemAt(it) },
+                            player.currentMediaItemIndex,
+                            player.currentPosition,
+                        ),
+                    )
+                }
+            }
+            return result
         }
 
         override fun onCustomCommand(
