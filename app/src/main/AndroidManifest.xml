@@ -48,6 +48,10 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/brano_widget_info" />
         </receiver>
+        <!-- Widget next/previous (Media3's receiver only takes "play"). -->
+        <receiver
+            android:name=".widget.WidgetActionReceiver"
+            android:exported="false" />
         <!-- Widget and headset buttons; starts the service and resumes the saved queue when needed. -->
         <receiver
             android:name="androidx.media3.session.MediaButtonReceiver"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- White so the widget can tint it with the album colour (setColorFilter). -->
+<!-- Default colour for the picker preview; the widget recolours it with the album colour (setColorFilter, SRC_ATOP). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#FFFFFFFF" />
+    <solid android:color="#FF14101F" />
     <corners android:radius="@dimen/widget_radius" />
 </shape>

@@ -43,9 +43,9 @@ object WidgetRenderer {
                 context.getString(if (s.isPlaying) R.string.cd_widget_pause else R.string.cd_widget_play),
             )
 
-            setOnClickPendingIntent(R.id.widget_prev, buttonIntent(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS))
-            setOnClickPendingIntent(R.id.widget_play, buttonIntent(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
-            setOnClickPendingIntent(R.id.widget_next, buttonIntent(context, KeyEvent.KEYCODE_MEDIA_NEXT))
+            setOnClickPendingIntent(R.id.widget_prev, skipIntent(context, WidgetActionReceiver.ACTION_PREVIOUS))
+            setOnClickPendingIntent(R.id.widget_play, playIntent(context))
+            setOnClickPendingIntent(R.id.widget_next, skipIntent(context, WidgetActionReceiver.ACTION_NEXT))
             val open = PendingIntent.getActivity(
                 context, 0, Intent(context, MainActivity::class.java),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
@@ -54,12 +54,26 @@ object WidgetRenderer {
             setOnClickPendingIntent(R.id.widget_text, open)
         }
 
-    /** Same path as a headset button: Media3 starts the service if needed and forwards the key. */
+    /**
+     * Play/pause, same path as a headset button: Media3 starts the service if needed, resumes the
+     * saved queue when nothing is loaded, and forwards the key.
+     */
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-    fun buttonIntent(context: Context, keyCode: Int): PendingIntent {
+    fun playIntent(context: Context): PendingIntent {
         val intent = Intent(Intent.ACTION_MEDIA_BUTTON)
             .setComponent(ComponentName(context, MediaButtonReceiver::class.java))
-            .putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
-        return PendingIntent.getBroadcast(context, keyCode, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            .putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
+        return PendingIntent.getBroadcast(context, REQUEST_PLAY, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
+
+    /** Next or previous ([WidgetActionReceiver.ACTION_NEXT] / [WidgetActionReceiver.ACTION_PREVIOUS]). */
+    fun skipIntent(context: Context, action: String): PendingIntent {
+        val intent = Intent(action).setComponent(ComponentName(context, WidgetActionReceiver::class.java))
+        val request = if (action == WidgetActionReceiver.ACTION_NEXT) REQUEST_NEXT else REQUEST_PREVIOUS
+        return PendingIntent.getBroadcast(context, request, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
+    private const val REQUEST_PLAY = 1
+    private const val REQUEST_NEXT = 2
+    private const val REQUEST_PREVIOUS = 3
 }

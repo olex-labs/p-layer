@@ -47,6 +47,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
+                android:text="@string/widget_empty_title"
                 android:textColor="#FFFFFFFF"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -57,6 +58,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
+                android:text="@string/widget_empty_subtitle"
                 android:textColor="#B3FFFFFF"
                 android:textSize="13sp" />
         </LinearLayout>

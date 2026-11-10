@@ -19,14 +19,22 @@ import org.robolectric.Shadows.shadowOf
 class WidgetRendererTest {
     private val ctx: Context = ApplicationProvider.getApplicationContext()
 
-    @Test fun buttonIntent_carriesTheKeyCode() {
-        for (k in listOf(KeyEvent.KEYCODE_MEDIA_PREVIOUS, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_NEXT)) {
-            val intent = shadowOf(WidgetRenderer.buttonIntent(ctx, k)).savedIntent
-            assertThat(intent.action).isEqualTo(Intent.ACTION_MEDIA_BUTTON)
-            assertThat(intent.component?.className).isEqualTo(MediaButtonReceiver::class.java.name)
-            @Suppress("DEPRECATION")
-            val event = intent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)!!
-            assertThat(event.keyCode).isEqualTo(k)
+    @Test fun playIntent_isAPlayPauseMediaButton() {
+        // Media3's receiver can start the service (and resume the saved queue) only for "play".
+        val intent = shadowOf(WidgetRenderer.playIntent(ctx)).savedIntent
+        assertThat(intent.action).isEqualTo(Intent.ACTION_MEDIA_BUTTON)
+        assertThat(intent.component?.className).isEqualTo(MediaButtonReceiver::class.java.name)
+        @Suppress("DEPRECATION")
+        val event = intent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)!!
+        assertThat(event.keyCode).isEqualTo(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
+    }
+
+    @Test fun skipIntents_goToBranosOwnReceiver() {
+        // Media3's receiver drops next/previous on API 26+, so they go through WidgetActionReceiver.
+        for (action in listOf(WidgetActionReceiver.ACTION_NEXT, WidgetActionReceiver.ACTION_PREVIOUS)) {
+            val intent = shadowOf(WidgetRenderer.skipIntent(ctx, action)).savedIntent
+            assertThat(intent.action).isEqualTo(action)
+            assertThat(intent.component?.className).isEqualTo(WidgetActionReceiver::class.java.name)
         }
     }
 
