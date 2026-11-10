@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import app.brano.R
 import app.brano.data.library.Artist
@@ -31,8 +32,8 @@ fun ArtistsTab(artists: List<Artist>, onOpenArtist: (Long) -> Unit) {
                 headlineContent = { Text(artist.name ?: stringResource(R.string.unknown_artist)) },
                 supportingContent = {
                     Text(
-                        stringResource(R.string.albums_count, artist.albumCount) + " · " +
-                            stringResource(R.string.tracks_count, artist.tracks.size),
+                        pluralStringResource(R.plurals.albums_count, artist.albumCount, artist.albumCount) + " · " +
+                            pluralStringResource(R.plurals.tracks_count, artist.tracks.size, artist.tracks.size),
                     )
                 },
                 leadingContent = {

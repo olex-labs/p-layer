@@ -39,6 +39,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -148,7 +149,7 @@ fun PlaylistsScreen(
             items(playlists, key = { "pl-${it.id}" }) { p ->
                 ListItem(
                     headlineContent = { Text(p.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    supportingContent = { Text(stringResource(R.string.tracks_count, p.trackCount)) },
+                    supportingContent = { Text(pluralStringResource(R.plurals.tracks_count, p.trackCount, p.trackCount)) },
                     leadingContent = { Icon(AppIcons.Playlist, contentDescription = null) },
                     modifier = Modifier.clickable { onOpenPlaylist(p.id) },
                 )

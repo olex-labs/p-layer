@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import app.brano.R
 import app.brano.data.library.FolderNode
@@ -43,7 +44,7 @@ fun FoldersTab(
         items(node.children, key = { it.path }) { child ->
             ListItem(
                 headlineContent = { Text(child.name) },
-                supportingContent = { Text(stringResource(R.string.tracks_count, child.trackTotal())) },
+                supportingContent = { Text(child.trackTotal().let { n -> pluralStringResource(R.plurals.tracks_count, n, n) }) },
                 leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 modifier = Modifier.clickable(enabled = !selection.active) { onOpenFolder(child.path) },

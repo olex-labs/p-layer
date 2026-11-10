@@ -10,6 +10,10 @@ plugins {
 }
 
 android {
+    androidResources {
+        // Per-app language on Android 13+ (Settings → Apps → P-layer → Language).
+        generateLocaleConfig = true
+    }
     namespace = "app.brano"
     compileSdk = 36
 
@@ -17,8 +21,8 @@ android {
         applicationId = "io.github.olexlabs.player"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.9.0"
+        versionCode = 10
+        versionName = "1.10.0"
         testInstrumentationRunner = "app.brano.HiltTestRunner"
     }
 

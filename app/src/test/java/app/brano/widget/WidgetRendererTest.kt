@@ -41,7 +41,7 @@ class WidgetRendererTest {
     @Test fun render_emptyState_usesAppNameCopy() {
         val v = WidgetRenderer.render(ctx, WidgetState.EMPTY, null, DEFAULT_WIDGET_BG).apply(ctx, FrameLayout(ctx))
         assertThat(v.findViewById<TextView>(R.id.widget_title).text.toString()).isEqualTo("P-layer")
-        assertThat(v.findViewById<TextView>(R.id.widget_artist).text.toString()).isEqualTo("Tocca ▶ per iniziare")
+        assertThat(v.findViewById<TextView>(R.id.widget_artist).text.toString()).isEqualTo(ctx.getString(R.string.widget_empty_subtitle))
     }
 
     @Test fun render_playing_showsPauseIcon() {

@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -243,7 +244,7 @@ private fun DetailList(
             CoverHeader(
                 albumId = tracks.firstOrNull()?.albumId,
                 subtitle = null,
-                meta = stringResource(R.string.tracks_count, tracks.size) + " · " +
+                meta = pluralStringResource(R.plurals.tracks_count, tracks.size, tracks.size) + " · " +
                     formatTotalDuration(tracks.sumOf { it.durationMs }),
                 onPlay = { viewModel.play(items.indexOfFirst { it.track != null }.coerceAtLeast(0)) },
                 onShuffle = viewModel::shuffle,

@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import app.brano.R
 import app.brano.ui.icons.AppIcons
@@ -46,7 +47,7 @@ fun SelectionTopBar(
 ) {
     TopAppBar(
         expandedHeight = height,
-        title = { Text(stringResource(R.string.selected_count, count)) },
+        title = { Text(pluralStringResource(R.plurals.selected_count, count, count)) },
         navigationIcon = {
             IconButton(onClick = onClose) { Icon(AppIcons.Close, contentDescription = stringResource(R.string.close)) }
         },
