@@ -86,3 +86,12 @@ Da provare sul telefono:
 - [ ] Launcher diversi da Pixel (Samsung One UI, MIUI): dimensioni e angoli.
 - [ ] ▶ dal widget dopo molte ore di inattività (il sistema ha chiuso l'app).
 - [ ] Ultimo brano della coda: ⏭ non fa nulla, come in Media3.
+## v1.9 — P-layer
+
+Verificato sull'emulatore:
+- [x] Il nuovo ID \io.github.olexlabs.player\ si installa accanto alla vecchia app e parte; il nome mostrato è \P-layer\.
+- [x] Widget aggiunto durante la riproduzione: mostra subito brano, copertina e colore.
+- [x] Dopo il riavvio il widget mostra l'ultimo brano con copertina, colore e ▶.
+
+Da provare sul telefono:
+- [ ] Disinstallare Brano (vecchio ID) prima di installare P-layer: preferiti e playlist non vengono trasferiti, esportare le playlist in M3U prima.

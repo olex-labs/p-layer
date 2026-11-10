@@ -68,23 +68,23 @@ internal class ShufflingPlayer(
         afterNewQueue()
     }
 
-    private var keepNextOrder = false
+    private var keepNextOrder: List<String>? = null
 
     /**
      * The next [setMediaItems] puts back a queue that is already in its final order (playback
-     * resumption hands the restored queue back): keep it and the saved original order, once.
+     * resumption hands the restored queue back): keep it and the saved original order, once, and
+     * only if it is that same list of [ids].
      */
-    fun keepOrderOnce() {
-        keepNextOrder = true
+    fun keepOrderOnce(ids: List<String>) {
+        keepNextOrder = ids
     }
 
     /** A new list while shuffle is on plays shuffled from the chosen track. */
     private fun afterNewQueue() {
         onNewQueue()
-        if (keepNextOrder) {
-            keepNextOrder = false
-            return
-        }
+        val keep = keepNextOrder
+        keepNextOrder = null
+        if (keep != null && List(wrappedPlayer.mediaItemCount) { wrappedPlayer.getMediaItemAt(it).mediaId } == keep) return
         val p = wrappedPlayer
         if (!p.shuffleModeEnabled) {
             unshuffledIds = null

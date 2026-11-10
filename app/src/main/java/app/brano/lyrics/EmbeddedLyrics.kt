@@ -41,10 +41,13 @@ object EmbeddedLyrics {
         val version = input.readUnsignedByte()
         input.readUnsignedByte() // revision
         val flags = input.readUnsignedByte()
-        val size = synchsafe(input.readInt())
-        if (version !in 3..4 || size <= 0 || size > MAX_TAG_BYTES) return null
-        val tag = ByteArray(size)
-        input.readFully(tag)
+        val tagSize = synchsafe(input.readInt())
+        if (version !in 3..4 || tagSize <= 0 || tagSize > MAX_TAG_BYTES) return null
+        val raw = ByteArray(tagSize)
+        input.readFully(raw)
+        // v2.3: the whole tag may be unsynchronised; v2.4 marks it per frame instead.
+        val tag = if (version == 3 && flags and 0x80 != 0) resync(raw, 0, raw.size) else raw
+        val size = tag.size
         var pos = 0
         if (flags and 0x40 != 0) {
             if (size < 4) return null
@@ -61,13 +64,36 @@ object EmbeddedLyrics {
             val start = pos + 10
             if (frameSize <= 0 || start + frameSize > size) break
             val end = start + frameSize.toInt()
-            when (id) {
-                "USLT" -> if (uslt == null) uslt = usltText(tag, start, end)
-                "SYLT" -> if (sylt == null) sylt = syltAsLrc(tag, start, end)
+            if (id == "USLT" || id == "SYLT") {
+                val data = frameData(tag, start, end, version, tagFlags = flags, formatFlags = tag[pos + 9].toInt())
+                when (id) {
+                    "USLT" -> if (uslt == null) uslt = usltText(data, 0, data.size)
+                    "SYLT" -> if (sylt == null) sylt = syltAsLrc(data, 0, data.size)
+                }
             }
             pos = end
         }
         return sylt?.takeIf { it.isNotBlank() } ?: uslt?.takeIf { it.isNotBlank() }
+    }
+
+    /** A v2.4 frame's data without its data-length indicator and unsynchronisation. */
+    private fun frameData(tag: ByteArray, start: Int, end: Int, version: Int, tagFlags: Int, formatFlags: Int): ByteArray {
+        if (version != 4) return tag.copyOfRange(start, end)
+        val from = if (formatFlags and 0x01 != 0) minOf(start + 4, end) else start
+        val unsynced = formatFlags and 0x02 != 0 || tagFlags and 0x80 != 0
+        return if (unsynced) resync(tag, from, end) else tag.copyOfRange(from, end)
+    }
+
+    /** Undoes ID3 unsynchronisation: drops the 0x00 written after every 0xFF. */
+    private fun resync(b: ByteArray, from: Int, to: Int): ByteArray {
+        val out = java.io.ByteArrayOutputStream(to - from)
+        var i = from
+        while (i < to) {
+            out.write(b[i].toInt())
+            if (b[i] == 0xFF.toByte() && i + 1 < to && b[i + 1] == 0.toByte()) i++
+            i++
+        }
+        return out.toByteArray()
     }
 
     /** USLT: encoding, language (3), description (terminated), text. */

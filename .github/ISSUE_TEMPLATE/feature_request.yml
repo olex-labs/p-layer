@@ -1,0 +1,19 @@
+name: Feature request
+description: An idea to make P-layer better
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do?
+      description: The need behind the idea. For example, "I listen in the car and want…"
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How could P-layer help?
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you have tried

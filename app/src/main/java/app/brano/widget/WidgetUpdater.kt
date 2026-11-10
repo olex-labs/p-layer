@@ -34,36 +34,56 @@ class WidgetUpdater(
     private var shownCover: Bitmap? = null
     private var shownBackground = DEFAULT_WIDGET_BG
 
-    fun update(s: WidgetState) {
+    /** Pushes [s] when it differs from what the widget shows. Returns the drawing job, if any. */
+    fun update(s: WidgetState): Job? {
         runCatching { save(s) }.onFailure(log)
-        if (s == last) return
-        val ids = runCatching { widgetIds() }.onFailure(log).getOrNull() ?: return
-        if (ids.isEmpty()) return
+        if (s == last) return null
+        val ids = runCatching { widgetIds() }.onFailure(log).getOrNull() ?: return null
+        if (ids.isEmpty()) return null
         last = s
         job?.cancel()
-        job = scope.launch {
+        return scope.launch {
+            val album = s.albumId
+            if (album != shownAlbum) {
+                // Load first, then switch all three together: a cancelled load must never leave
+                // one album's cover paired with another album's id. A failed load is just "none".
+                val newCover = album?.let { orNull { cover(it) } }
+                val newBackground = album?.let { orNull { background(it) } } ?: DEFAULT_WIDGET_BG
+                shownCover = newCover
+                shownBackground = newBackground
+                shownAlbum = album
+            }
             try {
-                val album = s.albumId
-                if (album != shownAlbum) {
-                    // Load first, then switch all three together: a cancelled load must never leave
-                    // one album's cover paired with another album's id.
-                    val newCover = album?.let { cover(it) }
-                    val newBackground = album?.let { background(it) } ?: DEFAULT_WIDGET_BG
-                    shownCover = newCover
-                    shownBackground = newBackground
-                    shownAlbum = album
-                }
                 push(s, shownCover, shownBackground)
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
             } catch (e: Exception) {
+                last = null // not shown: the same state must be tried again
                 log(e)
             }
-        }
+        }.also { job = it }
     }
 
+    /** Redraws [s] even if unchanged, e.g. for a widget just added to the home screen. */
+    fun refresh(s: WidgetState): Job? {
+        last = null
+        return update(s)
+    }
+
+    private suspend fun <T> orNull(block: suspend () -> T): T? = try {
+        block()
+    } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        log(e)
+        null
+    }
     companion object {
         private const val TAG = "BranoWidget"
+
+        /**
+         * Set by the playback service while it runs: redraws every widget with the current track.
+         * Null means the service is off (the widget provider then draws the saved state itself).
+         */
+        @Volatile var liveRefresh: (() -> Unit)? = null
 
         fun create(context: Context, scope: CoroutineScope, seeds: ArtworkSeedLoader): WidgetUpdater {
             val app = context.applicationContext

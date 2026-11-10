@@ -87,7 +87,31 @@ class WidgetUpdaterTest {
         assertThat(pushed.last()).isEqualTo(Triple(a.copy(isPlaying = false), bitmapA, 42))
     }
 
-    @Test fun coverNull_pushesWithNullBitmap()= runTest(StandardTestDispatcher()) {
+    @Test fun refresh_pushesTheSameStateAgain() = runTest(StandardTestDispatcher()) {
+        // A widget added mid-playback: the service redraws it with cover and colour.
+        val u = updater()
+        u.update(a); runCurrent()
+        u.refresh(a); runCurrent()
+        assertThat(pushed.map { it.first }).containsExactly(a, a)
+        assertThat(pushed.map { it.second }).containsExactly(bitmapA, bitmapA)
+    }
+
+    @Test fun failedPush_isRetriedWithTheSameState() = runTest(StandardTestDispatcher()) {
+        var fail = true
+        val u = updater(push = { s, bmp, bg -> if (fail) throw IllegalStateException("launcher gone") else pushed += Triple(s, bmp, bg) })
+        u.update(a); runCurrent()
+        fail = false
+        u.update(a); runCurrent()
+        assertThat(pushed).containsExactly(Triple(a, bitmapA, 42))
+    }
+
+    @Test fun coverThrows_stillPushesTheNewTrack() = runTest(StandardTestDispatcher()) {
+        val u = updater(cover = { throw IllegalStateException("bad art") })
+        u.update(a); runCurrent()
+        assertThat(pushed).containsExactly(Triple(a, null, 42))
+    }
+
+    @Test fun coverNull_pushesWithNullBitmap() = runTest(StandardTestDispatcher()) {
         val u = updater(cover = { null })
         u.update(a); runCurrent()
         assertThat(pushed).containsExactly(Triple(a, null, 42))

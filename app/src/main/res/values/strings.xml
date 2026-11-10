@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Brano</string>
+    <string name="app_name">P-layer</string>
     <string name="playback_error">Impossibile riprodurre: %1$s</string>
 
     <string name="tab_library">Libreria</string>
@@ -13,7 +13,7 @@
     <string name="unknown_album">Album sconosciuto</string>
 
     <string name="permission_title">Accesso alla musica</string>
-    <string name="permission_rationale">Brano ha bisogno di accedere ai file audio del dispositivo per mostrare e riprodurre la tua musica. Nessun dato lascia il telefono.</string>
+    <string name="permission_rationale">P-layer ha bisogno di accedere ai file audio del dispositivo per mostrare e riprodurre la tua musica. Nessun dato lascia il telefono.</string>
     <string name="permission_grant">Concedi accesso</string>
     <string name="permission_denied">Senza il permesso non posso leggere la tua libreria musicale.</string>
     <string name="permission_denied_permanent">Il permesso è stato negato. Puoi concederlo dalle impostazioni dell\'app.</string>
@@ -125,7 +125,7 @@
     <string name="settings_rescan">Riscansiona libreria</string>
     <string name="settings_version">Versione</string>
     <string name="settings_music_folders">Cartelle musicali</string>
-    <string name="settings_music_folders_hint">Brano legge solo queste cartelle. Se l\'elenco è vuoto legge tutto il telefono.</string>
+    <string name="settings_music_folders_hint">P-layer legge solo queste cartelle. Se l\'elenco è vuoto legge tutto il telefono.</string>
     <string name="settings_add_music_folder">Aggiungi cartella</string>
     <string name="settings_remove_music_folder">Rimuovi cartella</string>
     <string name="settings_folder_unsupported">Questa cartella non è sul telefono o sulla scheda SD</string>
@@ -133,18 +133,19 @@
     <string name="settings_hidden_empty">Nessun brano nascosto</string>
     <string name="action_unhide">Mostra</string>
     <string name="action_unhide_all">Mostra tutti</string>
-    <string name="action_hide">Nascondi da Brano</string>
+    <string name="action_hide">Nascondi da P-layer</string>
     <string name="action_delete">Elimina dal telefono</string>
     <string name="cd_lyrics">Testo</string>
     <string name="lyrics_none">Nessun testo per questo brano</string>
     <string name="lyrics_enable_online">Puoi attivare la ricerca online dei testi nelle Impostazioni, oppure mettere un file .lrc accanto alla canzone</string>
     <string name="settings_online_lyrics">Cerca testi online</string>
     <string name="settings_online_lyrics_hint">Usa internet solo per scaricare i testi da LRCLIB</string>
-    <string name="widget_label">Brano · Barra</string>
-    <string name="widget_empty_title">Brano</string>
+    <string name="widget_label">P-layer · Barra</string>
+    <string name="widget_empty_title">P-layer</string>
     <string name="widget_empty_subtitle">Tocca ▶ per iniziare</string>
     <string name="cd_widget_prev">Brano precedente</string>
     <string name="cd_widget_play">Riproduci</string>
     <string name="cd_widget_pause">Pausa</string>
     <string name="cd_widget_next">Brano successivo</string>
+    <string name="settings_folder_no_lrc_access">Cartella aggiunta, ma Android non ha concesso l\'accesso: i file .lrc di questa cartella non saranno letti.</string>
 </resources>

@@ -22,6 +22,32 @@ class EmbeddedLyricsTest {
             ByteArray(64) // audio follows
     }
 
+    /** ID3 unsynchronisation: a 0x00 is inserted after every 0xFF. */
+    private fun unsync(b: ByteArray): ByteArray {
+        val out = ByteArrayOutputStream()
+        for (x in b) { out.write(x.toInt()); if (x == 0xFF.toByte()) out.write(0) }
+        return out.toByteArray()
+    }
+
+    @Test fun id3v23_wholeTagUnsynchronised() {
+        val text = "aÿb" // ÿ is 0xFF in Latin-1
+        val uslt = byteArrayOf(0) + "ita".toByteArray() + byteArrayOf(0) + text.toByteArray(Charsets.ISO_8859_1)
+        val frame = "USLT".toByteArray() + be32(uslt.size) + byteArrayOf(0, 0) + uslt
+        val body = unsync(frame)
+        val file = byteArrayOf('I'.code.toByte(), 'D'.code.toByte(), '3'.code.toByte(), 3, 0, 0x80.toByte()) +
+            synchsafe(body.size) + body + ByteArray(64)
+        assertThat(EmbeddedLyrics.read(file.inputStream())).isEqualTo(text)
+    }
+
+    @Test fun id3v24_frameUnsynchronised() {
+        val text = "cÿd"
+        val uslt = unsync(byteArrayOf(0) + "ita".toByteArray() + byteArrayOf(0) + text.toByteArray(Charsets.ISO_8859_1))
+        val frame = "USLT".toByteArray() + synchsafe(uslt.size) + byteArrayOf(0, 0x02) + uslt
+        val file = byteArrayOf('I'.code.toByte(), 'D'.code.toByte(), '3'.code.toByte(), 4, 0, 0) +
+            synchsafe(frame.size) + frame + ByteArray(64)
+        assertThat(EmbeddedLyrics.read(file.inputStream())).isEqualTo(text)
+    }
+
     @Test fun id3v23_usltLatin1() {
         val uslt = byteArrayOf(0) + "ita".toByteArray() + byteArrayOf(0) + "Caffè a mezzanotte".toByteArray(Charsets.ISO_8859_1)
         assertThat(EmbeddedLyrics.read(id3(3, "TIT2" to byteArrayOf(0, 65), "USLT" to uslt).inputStream()))

@@ -74,6 +74,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     var showHidden by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val unsupported = stringResource(R.string.settings_folder_unsupported)
+    val noLrcAccess = stringResource(R.string.settings_folder_no_lrc_access)
     // The system folder picker: the grant it gives is kept, so Brano can later read .lrc files there.
     val pickFolder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
@@ -82,9 +83,11 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         if (path == null) {
             Toast.makeText(context, unsupported, Toast.LENGTH_LONG).show()
         } else {
-            runCatching {
+            val granted = runCatching {
                 context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+            }.isSuccess
+            // The folder still filters the library; only its .lrc files stay unreadable.
+            if (!granted) Toast.makeText(context, noLrcAccess, Toast.LENGTH_LONG).show()
             // Same folder picked again through another URI: drop the old grant, the new one replaces it.
             folders.firstOrNull { it.path == path && it.treeUri != uri.toString() }?.let { old ->
                 runCatching {

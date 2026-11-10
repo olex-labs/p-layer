@@ -22,6 +22,8 @@ import app.brano.playback.PlaybackService
 class WidgetActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action?.takeIf { it == ACTION_NEXT || it == ACTION_PREVIOUS } ?: return
+        // Service off: nothing is loaded to skip through, and binding would only start it for nothing.
+        if (WidgetUpdater.liveRefresh == null) return
         val app = context.applicationContext
         val pending = goAsync()
         val future = MediaController.Builder(app, SessionToken(app, ComponentName(app, PlaybackService::class.java)))

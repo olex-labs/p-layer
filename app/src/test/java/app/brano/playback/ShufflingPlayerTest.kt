@@ -85,13 +85,23 @@ class ShufflingPlayerTest {
         current = 0
         player.restoreShuffle(on = true, unshuffled = listOf("1", "2", "3"))
 
-        player.keepOrderOnce()
+        player.keepOrderOnce(listOf("3", "1", "2"))
         player.setMediaItems(shuffled, 0, 0)
 
         assertThat(ids()).containsExactly("3", "1", "2").inOrder()
         assertThat(player.unshuffledIds).containsExactly("1", "2", "3").inOrder()
 
         // Only once: the next new list is shuffled again, from the chosen track.
+        player.setMediaItems((1..8).map(::item), 2, 0)
+        assertThat(player.unshuffledIds).isEqualTo((1..8).map(Int::toString))
+    }
+
+    @Test fun keepOrderOnce_otherList_isShuffledAsUsual() {
+        // A double cold press may leave the flag set: a different list must still be shuffled.
+        items = listOf(3, 1, 2).map(::item).toMutableList()
+        current = 0
+        player.restoreShuffle(on = true, unshuffled = listOf("1", "2", "3"))
+        player.keepOrderOnce(listOf("3", "1", "2"))
         player.setMediaItems((1..8).map(::item), 2, 0)
         assertThat(player.unshuffledIds).isEqualTo((1..8).map(Int::toString))
     }
