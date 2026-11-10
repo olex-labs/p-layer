@@ -85,6 +85,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             runCatching {
                 context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
+            // Same folder picked again through another URI: drop the old grant, the new one replaces it.
+            folders.firstOrNull { it.path == path && it.treeUri != uri.toString() }?.let { old ->
+                runCatching {
+                    context.contentResolver.releasePersistableUriPermission(Uri.parse(old.treeUri), Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+            }
             viewModel.addMusicFolder(path, uri.toString())
         }
     }

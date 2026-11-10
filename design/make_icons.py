@@ -1,4 +1,4 @@
-"""Brano icon set: renames the Gemini SVGs and draws the missing ones in the same style
+﻿"""Brano icon set: renames the Gemini SVGs and draws the missing ones in the same style
 (24x24, 2px round strokes, soft filled shapes, a single currentColor).
 
 Run from the project root:  python -I design/make_icons.py
@@ -95,24 +95,43 @@ def svg(size, body):
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size} {size}">\n  {body}\n</svg>\n'
 
 
-# Launcher: a vinyl disc that is the bowl of a lowercase "b" (stem on the left), inside the 66px safe circle.
-CREAM, INK = '#FFF7ED', '#231F1A'
-B_STEM = 'M36 33.5a3.5 3.5 0 0 1 7 0V61h-7z'
-LAUNCHER_FILES = {
-    'launcher_foreground.svg': svg(108, f'<path fill="{CREAM}" d="{B_STEM}"/>'
-                                        f'<circle fill="{CREAM}" cx="57" cy="61" r="19"/>'
-                                        f'<circle fill="none" stroke="{INK}" stroke-opacity=".25" stroke-width="1.2" cx="57" cy="61" r="14"/>'
-                                        f'<circle fill="#7C5CFF" cx="57" cy="61" r="6.3"/><circle fill="{CREAM}" cx="57" cy="61" r="1.8"/>'),
-    'launcher_background.svg': svg(108, '<defs><radialGradient id="g" cx="54" cy="30" r="90" gradientUnits="userSpaceOnUse">'
-                                        '<stop offset="0" stop-color="#7C5CFF"/><stop offset="1" stop-color="#7C2D12"/></radialGradient></defs>'
-                                        '<rect width="108" height="108" fill="url(#g)"/>'),
-    'launcher_monochrome.svg': svg(108, f'<path fill="#000" d="{B_STEM}"/>'
-                                        '<path fill="#000" fill-rule="evenodd" d="M76 61a19 19 0 1 1-38 0 19 19 0 0 1 38 0zM63.3 61a6.3 6.3 0 1 0-12.6 0 6.3 6.3 0 0 0 12.6 0z"/>'
-                                        '<circle fill="#000" cx="57" cy="61" r="1.8"/>'),
-    'notification.svg': svg(24, '<path fill="#FFFFFF" d="M5 5.2a1.7 1.7 0 0 1 3.4 0V14H5z"/>'
-                               '<path fill="#FFFFFF" fill-rule="evenodd" d="M21 14.2a6.8 6.8 0 1 1-13.6 0 6.8 6.8 0 0 1 13.6 0zM16.4 14.2a2.2 2.2 0 1 0-4.4 0 2.2 2.2 0 0 0 4.4 0z"/>'),
-}
+# Launcher (from Gemini's design/icon-app-svg.svg): a lilac vinyl with two light groove arcs,
+# a dark label and a white note. Dash arrays are not supported by Android vectors, so the
+# grooves are explicit arcs. Everything sits inside the 66px safe circle (radius 33).
+import math
 
+LILAC, LILAC_SOFT, DARK, WHITE = '#7C5CFF', '#B9A6FF', '#14101F', '#FFFFFF'
+C = 54
+
+
+def _arc(r, a0, a1):
+    p = lambda a: (C + r * math.cos(math.radians(a)), C + r * math.sin(math.radians(a)))
+    (x0, y0), (x1, y1) = p(a0), p(a1)
+    large = 1 if (a1 - a0) % 360 > 180 else 0
+    return f'M{x0:.2f} {y0:.2f}A{r} {r} 0 {large} 1 {x1:.2f} {y1:.2f}'
+
+
+def _note():
+    """Gemini's note, scaled into the label and centred on (54, 54)."""
+    return ('<circle fill="{f}" cx="51.01" cy="58.04" r="2.94"/>'
+            '<path fill="{f}" d="M52.48 58.04V48.3a1.3 1.3 0 0 1 1.3-1.3H58.63a1.3 1.3 0 0 1 1.3 1.3v1.72'
+            'a1.3 1.3 0 0 1-1.3 1.3H53.95V58.04Z"/>')
+
+DISC_R, LABEL_R = 29, 11.5
+GROOVES = (_arc(21, 140, 285), _arc(21, 320, 70))
+LAUNCHER_FILES = {
+    'launcher_foreground.svg': svg(108, f'<circle fill="{LILAC}" cx="{C}" cy="{C}" r="{DISC_R}"/>'
+                                        + ''.join(f'<path fill="none" stroke="{LILAC_SOFT}" stroke-width="4" stroke-linecap="round" d="{d}"/>' for d in GROOVES)
+                                        + f'<circle fill="{DARK}" cx="{C}" cy="{C}" r="{LABEL_R}"/>' + _note().replace('{f}', WHITE)),
+    'launcher_background.svg': svg(108, '<defs><radialGradient id="g" cx="54" cy="54" r="64" gradientUnits="userSpaceOnUse">'
+                                        f'<stop offset="0" stop-color="#2E2266"/><stop offset="1" stop-color="{DARK}"/></radialGradient></defs>'
+                                        '<rect width="108" height="108" fill="url(#g)"/>'),
+    'launcher_monochrome.svg': svg(108, f'<path fill="#000" fill-rule="evenodd" d="M{C - DISC_R} {C}a{DISC_R} {DISC_R} 0 1 0 {2 * DISC_R} 0a{DISC_R} {DISC_R} 0 1 0 {-2 * DISC_R} 0z'
+                                        f'M{C - LABEL_R} {C}a{LABEL_R} {LABEL_R} 0 1 0 {2 * LABEL_R} 0a{LABEL_R} {LABEL_R} 0 1 0 {-2 * LABEL_R} 0z"/>'
+                                        + _note().replace('{f}', '#000')),
+    'notification.svg': svg(24, '<path fill="#FFFFFF" fill-rule="evenodd" d="M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0z"/>'
+                               '<circle fill="#FFFFFF" cx="12" cy="12" r="1.6"/>'),
+}
 
 def main():
     os.makedirs(os.path.join(ICONS, 'scartate'), exist_ok=True)

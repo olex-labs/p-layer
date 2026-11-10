@@ -6,8 +6,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Finds a track's lyrics, first hit wins: downloaded copy in [cacheDir], the .lrc file next to the
- * track ([sidecar]), lyrics inside the file ([embedded]), then LRCLIB ([online]) only when
+ * Finds a track's lyrics, first hit wins: the .lrc file next to the track ([sidecar]), lyrics
+ * inside the file ([embedded]), downloaded copy in [cacheDir], then LRCLIB ([online]) only when
  * [onlineEnabled]. A download is kept; "not found" online is remembered for a week, a network
  * failure is not.
  */
@@ -20,12 +20,13 @@ class LyricsRepository(
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     suspend fun load(track: Track): Lyrics? = withContext(Dispatchers.IO) {
-        val cached = File(cacheDir, "${track.id}.lrc")
-        if (cached.exists()) LyricsParser.parse(cached.readText(), LyricsSource.CACHE)?.let { return@withContext it }
+        // The user's own files come first, so an .lrc added after a download replaces it.
         quietly { sidecar(track) }
             ?.let { LyricsParser.parse(it, LyricsSource.FILE) }?.let { return@withContext it }
         quietly { embedded(track) }
             ?.let { LyricsParser.parse(it, LyricsSource.EMBEDDED) }?.let { return@withContext it }
+        val cached = File(cacheDir, "${track.id}.lrc")
+        if (cached.exists()) LyricsParser.parse(cached.readText(), LyricsSource.CACHE)?.let { return@withContext it }
         if (!onlineEnabled()) return@withContext null
 
         val miss = File(cacheDir, "${track.id}.miss")

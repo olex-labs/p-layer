@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -98,6 +99,7 @@ class PlayerViewModel internal constructor(
     /** Loaded only while visible, for the current track; a track change cancels a pending load. */
     val lyrics: StateFlow<LyricsState> = combine(_lyricsVisible, controller.state.map { it.current }.distinctUntilChanged()) { v, t -> v to t }
         .transformLatest { (visible, track) ->
+            controller.fastPosition = visible
             when {
                 !visible -> emit(LyricsState.Hidden)
                 track == null -> emit(LyricsState.None)
@@ -107,6 +109,8 @@ class PlayerViewModel internal constructor(
                 }
             }
         }
+        // Collected only while the player is on screen: in the background the 200 ms ticks stop.
+        .onCompletion { controller.fastPosition = false }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LyricsState.Hidden)
 
     fun toggleLyrics() {

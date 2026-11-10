@@ -149,6 +149,17 @@ class PlayerViewModelTest {
         assertThat(vm.lyrics.value).isEqualTo(LyricsState.Hidden)
     }
 
+    @Test fun lyrics_screenGone_stopsFastTicks() = runTest(UnconfinedTestDispatcher()) {
+        coEvery { lyricsRepo.load(any()) } returns null
+        val vm = vm()
+        val screen = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.lyrics.collect {} }
+        vm.toggleLyrics()
+        io.mockk.clearMocks(player, answers = false, recordedCalls = true, childMocks = false, verificationMarks = false, exclusionRules = false)
+        screen.cancel()
+        testScheduler.advanceTimeBy(6_000)
+        io.mockk.verify { player.fastPosition = false }
+    }
+
     @Test fun lyrics_noneWhenNothingFound() = runTest(UnconfinedTestDispatcher()) {
         coEvery { lyricsRepo.load(any()) } returns null
         val vm = vm()
