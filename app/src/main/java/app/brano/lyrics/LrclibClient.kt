@@ -67,7 +67,7 @@ private fun httpGet(url: URL): Pair<Int, String> {
     val c = url.openConnection() as HttpURLConnection
     c.connectTimeout = TIMEOUT_MS
     c.readTimeout = TIMEOUT_MS
-    c.setRequestProperty("User-Agent", "P-layer/1.9 (Android music player)")
+    c.setRequestProperty("User-Agent", "P-layer/1.10 (Android music player)")
     try {
         val code = c.responseCode
         val body = (if (code < 400) c.inputStream else c.errorStream)?.bufferedReader()?.use { it.readText() } ?: ""

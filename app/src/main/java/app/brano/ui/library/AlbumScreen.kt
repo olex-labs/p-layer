@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -60,7 +61,7 @@ fun AlbumScreen(
                         subtitle = album.artist ?: stringResource(R.string.unknown_artist),
                         meta = listOfNotNull(
                             album.year.takeIf { it > 0 }?.toString(),
-                            stringResource(R.string.tracks_count, album.trackCount),
+                            pluralStringResource(R.plurals.tracks_count, album.trackCount, album.trackCount),
                             formatTotalDuration(album.tracks.sumOf { it.durationMs }),
                         ).joinToString(" · "),
                         onPlay = { viewModel.play(album.tracks, 0) },

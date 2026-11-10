@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
+import app.brano.R
 import app.brano.data.db.PlaylistDao
 import app.brano.data.db.TrackResolver
 import app.brano.data.library.LibraryRepository
@@ -21,15 +22,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
-const val DEFAULT_IMPORTED_NAME = "Playlist importata"
-
 private const val EXTERNAL_STORAGE_AUTHORITY = "com.android.externalstorage.documents"
 private const val PRIMARY_ROOT = "/storage/emulated/0"
 
-/** File name without extension, or the fallback when the provider gave none. */
-internal fun playlistNameFromFile(displayName: String?): String {
+/** File name without extension, or [fallback] when the provider gave none. */
+internal fun playlistNameFromFile(displayName: String?, fallback: String): String {
     val base = displayName?.trim()?.substringBeforeLast('.', displayName.trim())?.trim().orEmpty()
-    return base.ifEmpty { DEFAULT_IMPORTED_NAME }
+    return base.ifEmpty { fallback }
 }
 
 /** Directory of an M3U on primary shared storage (for relative entries), or null when it cannot be derived. */
@@ -50,13 +49,15 @@ class PlaylistIo(
     private val contentResolver: ContentResolver,
     private val playlistDao: PlaylistDao,
     private val library: LibraryRepository,
+    /** Name for an imported playlist whose file name is unknown, in the user's language. */
+    private val importedName: String = "Imported playlist",
 ) {
     @Inject
     constructor(
         @ApplicationContext context: Context,
         playlistDao: PlaylistDao,
         library: LibraryRepository,
-    ) : this(context.contentResolver, playlistDao, library)
+    ) : this(context.contentResolver, playlistDao, library, context.getString(R.string.imported_playlist))
 
     /** Writes the playlist as M3U to [target]; items no longer in the library are skipped. */
     suspend fun export(playlistId: Long, target: Uri) {
@@ -77,7 +78,7 @@ class PlaylistIo(
         }
         val result = M3uMatcher.match(M3uParser.parse(text), m3uDirOf(source), library.tracks.value)
         if (result.matched.isNotEmpty()) {
-            val id = playlistDao.create(playlistNameFromFile(displayName(source)))
+            val id = playlistDao.create(playlistNameFromFile(displayName(source), importedName))
             playlistDao.addTracks(id, result.matched.map { it.ref() })
         }
         return result

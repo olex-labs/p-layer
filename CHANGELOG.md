@@ -3,6 +3,16 @@
 All notable changes to P-layer are listed here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.10.0] - 2026-11-10
+
+### Added
+- English interface. English is now the default language and Italian is used when the phone is set to Italian.
+- On Android 13+ you can set P-layer's language separately from the phone's (Settings → Apps → P-layer → Language).
+
+### Changed
+- Counts use real plurals ("1 song", "3 songs").
+- The playlist import summary reads "Imported: 3 · not found: 1".
+
 ## [1.9.0] - 2026-11-10
 
 First public release, under the new name **P-layer**.
@@ -89,6 +99,7 @@ First public release, under the new name **P-layer**.
 - Queue, shuffle, repeat, sleep timer, favourites and playlists (M3U import and export).
 - The queue and position are saved and restored.
 
+[1.10.0]: https://github.com/olex-labs/p-layer/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/olex-labs/p-layer/releases/tag/v1.9.0
 [1.8.0]: https://github.com/olex-labs/p-layer/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/olex-labs/p-layer/compare/v1.6.0...v1.7.0

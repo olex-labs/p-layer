@@ -55,6 +55,9 @@ P-layer plays the music already on your phone. It has no account, no ads and no 
 - A 4×1 bar with the cover, title and previous / play-pause / next buttons, in the album's colour.
 - ▶ works even when the app is closed: it resumes your last queue where you left off.
 
+**Languages**
+- English and Italian. On Android 13+ you can pick P-layer's language separately from the phone's: Settings → Apps → P-layer → Language.
+
 ## Download
 
 Get the APK from the [latest release](https://github.com/olex-labs/p-layer/releases/latest) and open it on your phone. You may need to allow installing apps from your browser or file manager.
@@ -105,7 +108,6 @@ The app makes a network request in one case only: you have turned on **Settings 
 - [ ] Equalizer and ReplayGain
 - [ ] Crossfade
 - [ ] Larger widget sizes
-- [ ] English translation of the interface
 
 Ideas and bug reports are welcome in [Issues](https://github.com/olex-labs/p-layer/issues).
 

@@ -84,11 +84,11 @@ class PlaylistIoTest {
     }
 
     @Test fun playlistName_stripsExtensionWithFallback() {
-        assertThat(playlistNameFromFile("Mix estate.m3u")).isEqualTo("Mix estate")
-        assertThat(playlistNameFromFile("a.b.m3u8")).isEqualTo("a.b")
-        assertThat(playlistNameFromFile("senza")).isEqualTo("senza")
-        assertThat(playlistNameFromFile(null)).isEqualTo("Playlist importata")
-        assertThat(playlistNameFromFile(".m3u")).isEqualTo("Playlist importata")
+        assertThat(playlistNameFromFile("Mix estate.m3u", "Playlist importata")).isEqualTo("Mix estate")
+        assertThat(playlistNameFromFile("a.b.m3u8", "x")).isEqualTo("a.b")
+        assertThat(playlistNameFromFile("senza", "x")).isEqualTo("senza")
+        assertThat(playlistNameFromFile(null, "Playlist importata")).isEqualTo("Playlist importata")
+        assertThat(playlistNameFromFile(".m3u", "Playlist importata")).isEqualTo("Playlist importata")
     }
 
     @Test fun m3uDir_fromPrimaryDocumentUri() {

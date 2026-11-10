@@ -43,6 +43,9 @@ P-layer riproduce la musica che hai già sul telefono. Non ha account, pubblicit
 - Copertina e comandi, nel colore dell'album.
 - ▶ funziona anche ad app chiusa.
 
+**Lingue**
+- Italiano e inglese. Da Android 13 puoi scegliere la lingua di P-layer separatamente da quella del telefono: Impostazioni → App → P-layer → Lingua.
+
 ## Scarica
 
 Scarica l'APK dall'[ultima release](https://github.com/olex-labs/p-layer/releases/latest). Funziona da Android 8.0 in su.
