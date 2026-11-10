@@ -11,3 +11,4 @@ docs/preview/ref/
 keystore.properties
 *.jks
 *.keystore
+.claude/

@@ -18,7 +18,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 9
-        versionName = "1.9"
+        versionName = "1.9.0"
         testInstrumentationRunner = "app.brano.HiltTestRunner"
     }
 
