@@ -33,6 +33,9 @@ class ReplayGainTagsTest {
         assertThat(ReplayGainTags.parseDb("+0 dB")).isEqualTo(0f)
         assertThat(ReplayGainTags.parseDb("loud")).isNull()
         assertThat(ReplayGainTags.parseDb(null)).isNull()
+        // A broken tag must never mute the song (NaN gain) or zero it (infinite peak).
+        assertThat(ReplayGainTags.parseDb("NaN")).isNull()
+        assertThat(ReplayGainTags.parseDb("Infinity")).isNull()
     }
 
     @Test fun noMetadata_isNone() {

@@ -133,7 +133,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 supportingContent = { Text(stringResource(R.string.settings_online_lyrics_hint)) },
                 trailingContent = { Switch(checked = settings.onlineLyrics, onCheckedChange = viewModel::setOnlineLyrics) },
             )
-            val eqAvailable = remember { EqualizerController.isAvailable() }
+            val eqUsable by EqualizerController.usable.collectAsStateWithLifecycle()
+            val eqAvailable = remember { EqualizerController.isAvailable() } && eqUsable
             var showEq by rememberSaveable { mutableStateOf(false) }
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_eq)) },

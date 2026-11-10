@@ -43,5 +43,6 @@ data class ReplayGainTags(
             ?.replace(',', '.')
             ?.removePrefix("+")
             ?.toFloatOrNull()
+            ?.takeIf { it.isFinite() } // NaN would mute the song, Infinity zero it
     }
 }

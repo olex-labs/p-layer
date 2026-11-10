@@ -8,7 +8,9 @@ import android.util.Log
  * The phone's equalizer on the player's audio session. Every call is guarded: a phone without the
  * effect, or one that fails, just plays without it.
  */
-class EqualizerController {
+class EqualizerController(
+    private val create: (Int) -> Equalizer = { Equalizer(0, it) },
+) {
     private var eq: Equalizer? = null
     private var preset: EqPreset = EqPreset.OFF
 
@@ -16,14 +18,15 @@ class EqualizerController {
     fun attach(audioSessionId: Int) {
         release()
         if (audioSessionId == 0) return
-        eq = guarded { Equalizer(0, audioSessionId) }
+        eq = guarded { create(audioSessionId) }
+        if (eq == null) _usable.value = false
         apply(preset)
     }
 
     fun apply(preset: EqPreset) {
         this.preset = preset
         val e = eq ?: return
-        guarded {
+        val ok = guarded {
             if (preset == EqPreset.OFF) {
                 e.enabled = false
             } else {
@@ -36,6 +39,7 @@ class EqualizerController {
                 e.enabled = true
             }
         }
+        if (ok == null) _usable.value = false
     }
 
     fun release() {
@@ -52,6 +56,15 @@ class EqualizerController {
 
     companion object {
         private const val TAG = "PlayerEq"
+
+        private val _usable = kotlinx.coroutines.flow.MutableStateFlow(true)
+
+        /** False once the phone refused the effect: Settings then says it is not available. */
+        val usable: kotlinx.coroutines.flow.StateFlow<Boolean> = _usable
+
+        internal fun markUsable() {
+            _usable.value = true
+        }
 
         /** Whether this phone offers an equalizer effect at all. */
         fun isAvailable(): Boolean = try {

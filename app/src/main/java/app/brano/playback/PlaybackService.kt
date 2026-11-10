@@ -47,6 +47,7 @@ import app.brano.playback.eq.EqPreset
 import app.brano.playback.eq.EqualizerController
 import app.brano.playback.rg.ReplayGainPolicy
 import app.brano.playback.rg.ReplayGainProcessor
+import app.brano.playback.rg.ReplayGainSink
 import app.brano.playback.rg.ReplayGainTags
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
@@ -74,7 +75,10 @@ class PlaybackService : MediaSessionService() {
 
     /** ReplayGain: scales the samples; 1 when off or the song has no tags. */
     private val replayGain = ReplayGainProcessor()
-    private var replayGainOn = true
+    @Volatile private var replayGainOn = true
+
+    /** Whole album in order: use album gain. Read by the sink on the playback thread. */
+    @Volatile private var albumMode = false
 
     /** Home screen widget; does nothing when no widget is placed. */
     private lateinit var widget: WidgetUpdater
@@ -119,9 +123,14 @@ class PlaybackService : MediaSessionService() {
                     context: Context,
                     enableFloatOutput: Boolean,
                     enableAudioTrackPlaybackParams: Boolean,
-                ): AudioSink = DefaultAudioSink.Builder(context)
-                    .setAudioProcessors(arrayOf(replayGain))
-                    .build()
+                ): AudioSink = ReplayGainSink(
+                    DefaultAudioSink.Builder(context)
+                        .setEnableFloatOutput(enableFloatOutput)
+                        .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                        .setAudioProcessors(arrayOf(replayGain))
+                        .build(),
+                    replayGain,
+                ) { metadata -> gainFor(metadata) }
             })
             .build()
         // Shuffle physically reorders the items (ShufflingPlayer), so the shuffle flag must not
@@ -256,26 +265,27 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+    /** Gain for a song's metadata with the current switch and album mode; called by the sink per song. */
+    private fun gainFor(metadata: androidx.media3.common.Metadata?): Float {
+        val gain = if (!replayGainOn) 1f else ReplayGainPolicy.linearGain(ReplayGainTags.from(metadata), albumMode)
+        Log.d(TAG, "ReplayGain gain=%.3f album=%b".format(gain, albumMode))
+        return gain
+    }
+
     /** Sets the ReplayGain multiplier for the current song: album gain for a whole album in order, else track gain. */
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     private fun updateGain() {
-        if (!replayGainOn) {
-            replayGain.gain = 1f
-            return
-        }
         val format = player.currentTracks.groups
             .firstOrNull { it.type == C.TRACK_TYPE_AUDIO && it.isSelected }
             ?.let { group -> (0 until group.length).firstOrNull { group.isTrackSelected(it) }?.let(group::getTrackFormat) }
-        val tags = ReplayGainTags.from(format?.metadata)
         val albumIds = List(player.mediaItemCount) { player.getMediaItemAt(it) }.map { MediaItemMapper.toTrackOrNull(it)?.albumId ?: -1L }
-        val album = ReplayGainPolicy.useAlbum(albumIds, shufflingPlayer.shuffleModeEnabled)
-        replayGain.gain = ReplayGainPolicy.linearGain(tags, album)
-        Log.d(TAG, "ReplayGain gain=%.3f album=%b".format(replayGain.gain, album))
+        albumMode = ReplayGainPolicy.useAlbum(albumIds, shufflingPlayer.shuffleModeEnabled)
+        // The sink sets each song's gain at its first samples; here only a settings or mode change is applied,
+        // and only once the current song's metadata is known (never overwrite it with an empty one).
+        if (format != null) replayGain.gain = gainFor(format.metadata)
     }
 
     private val playerListener = object : Player.Listener {
-        override fun onTracksChanged(tracks: androidx.media3.common.Tracks) = updateGain()
-
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) = updateGain()
 
         override fun onAudioSessionIdChanged(audioSessionId: Int) {
