@@ -78,6 +78,24 @@ class ShufflingPlayerTest {
         assertThat(player.unshuffledIds).isNull()
     }
 
+    @Test fun keepOrderOnce_setMediaItems_keepsOrderAndOriginal() {
+        // Playback resumption hands the restored (already shuffled) queue back through setMediaItems.
+        val shuffled = listOf(3, 1, 2).map(::item)
+        items = shuffled.toMutableList()
+        current = 0
+        player.restoreShuffle(on = true, unshuffled = listOf("1", "2", "3"))
+
+        player.keepOrderOnce()
+        player.setMediaItems(shuffled, 0, 0)
+
+        assertThat(ids()).containsExactly("3", "1", "2").inOrder()
+        assertThat(player.unshuffledIds).containsExactly("1", "2", "3").inOrder()
+
+        // Only once: the next new list is shuffled again, from the chosen track.
+        player.setMediaItems((1..8).map(::item), 2, 0)
+        assertThat(player.unshuffledIds).isEqualTo((1..8).map(Int::toString))
+    }
+
     @Test fun sameMode_isANoOp() {
         player.setShuffleModeEnabled(false)
         assertThat(ids()).isEqualTo((1..8).map(Int::toString))

@@ -140,4 +140,11 @@
     <string name="lyrics_enable_online">Puoi attivare la ricerca online dei testi nelle Impostazioni, oppure mettere un file .lrc accanto alla canzone</string>
     <string name="settings_online_lyrics">Cerca testi online</string>
     <string name="settings_online_lyrics_hint">Usa internet solo per scaricare i testi da LRCLIB</string>
+    <string name="widget_label">Brano · Barra</string>
+    <string name="widget_empty_title">Brano</string>
+    <string name="widget_empty_subtitle">Tocca ▶ per iniziare</string>
+    <string name="cd_widget_prev">Brano precedente</string>
+    <string name="cd_widget_play">Riproduci</string>
+    <string name="cd_widget_pause">Pausa</string>
+    <string name="cd_widget_next">Brano successivo</string>
 </resources>

@@ -70,3 +70,19 @@ Bluetooth/auto, aspetto lockscreen, chiamata reale, fluidita' di scorrimento, ga
 - Cartelle musicali con il selettore di sistema, nascondi/ripristina, elimina nel cestino, testi .lrc sincronizzati: verificati sull'emulatore (Android 16).
 - Avvio a freddo, installazione pulita, 2 giri alternati: v1.5 media 694 ms, v1.6 media 685 ms: nessuna regressione.
 - Da verificare dall'utente: testi incorporati in MP3/FLAC reali, ricerca online LRCLIB, eliminazione su Android 10, scheda SD come cartella musicale.
+
+## v1.8 — widget sulla schermata Home
+
+Verificato sull'emulatore (API 36, `Medium_Phone_API_36.1`):
+
+- [x] Il widget "Brano · Barra" (4x1) compare nella lista dei widget con l'anteprima scura, "Brano" e "Tocca ▶ per iniziare".
+- [x] Aggiunto alla Home mostra lo stato vuoto.
+- [x] ▶ ad app chiusa (servizio fermato e processo terminato): la coda salvata riparte dal punto in cui era (26 s → 29 s), senza crash.
+- [x] Durante la riproduzione mostra titolo, artista, copertina, colore dell'album e l'icona di pausa.
+- [x] ⏮ / ⏭ cambiano brano. Media3 scarta questi tasti dal proprio ricevitore, quindi passano da `WidgetActionReceiver`.
+- [x] Dopo il riavvio del telefono mostra ancora l'ultimo brano. Copertina e colore tornano al primo play.
+
+Da provare sul telefono:
+- [ ] Launcher diversi da Pixel (Samsung One UI, MIUI): dimensioni e angoli.
+- [ ] ▶ dal widget dopo molte ore di inattività (il sistema ha chiuso l'app).
+- [ ] Ultimo brano della coda: ⏭ non fa nulla, come in Media3.
