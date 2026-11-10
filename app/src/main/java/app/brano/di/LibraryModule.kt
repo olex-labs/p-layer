@@ -1,7 +1,8 @@
 package app.brano.di
 
 import android.content.Context
-import app.brano.data.db.ExcludedFolderDao
+import app.brano.data.db.HiddenTrackDao
+import app.brano.data.db.MusicFolderDao
 import app.brano.data.library.LibraryRepository
 import app.brano.data.library.LibrarySnapshotStore
 import app.brano.data.library.MediaStoreTrackSource
@@ -37,13 +38,15 @@ object LibraryModule {
     fun libraryRepository(
         source: TrackSource,
         snapshotStore: LibrarySnapshotStore,
-        excludedFolderDao: ExcludedFolderDao,
+        musicFolderDao: MusicFolderDao,
+        hiddenTrackDao: HiddenTrackDao,
         settingsRepository: SettingsRepository,
         @ApplicationScope scope: CoroutineScope,
     ) = LibraryRepository(
         source,
         snapshotStore,
-        excludedFolderDao.observe(),
+        musicFolderDao.observe(),
+        hiddenTrackDao.observe(),
         settingsRepository.settings.map { it.minDurationMs }.distinctUntilChanged(),
         scope,
     )

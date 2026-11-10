@@ -51,4 +51,11 @@ class SettingsRepositoryTest {
         repo.update { it.copy(spinDisc = false) }
         assertThat(repo.settings.first().spinDisc).isFalse()
     }
+
+    @Test fun onlineLyrics_offByDefault_andRoundTrips() = runTest {
+        val repo = SettingsRepository(dataStore("a"))
+        assertThat(repo.settings.first().onlineLyrics).isFalse()
+        repo.update { it.copy(onlineLyrics = true) }
+        assertThat(repo.settings.first().onlineLyrics).isTrue()
+    }
 }

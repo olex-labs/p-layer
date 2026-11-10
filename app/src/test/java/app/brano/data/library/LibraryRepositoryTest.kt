@@ -34,10 +34,11 @@ class LibraryRepositoryTest {
     private fun TestScope.repo(
         source: TrackSource,
         store: LibrarySnapshotStore,
-        excluded: Flow<Set<String>> = MutableStateFlow(emptySet()),
+        folders: Flow<Set<String>> = MutableStateFlow(emptySet()),
         min: Flow<Long> = MutableStateFlow(30_000L),
         compute: CoroutineDispatcher = UnconfinedTestDispatcher(testScheduler),
-    ) = LibraryRepository(source, store, excluded, min, CoroutineScope(UnconfinedTestDispatcher(testScheduler)), compute)
+        hidden: Flow<Set<String>> = MutableStateFlow(emptySet()),
+    ) = LibraryRepository(source, store, folders, hidden, min, CoroutineScope(UnconfinedTestDispatcher(testScheduler)), compute)
 
     @Test fun repository_emitsFreshFilteredAndPersistsSnapshot() = runTest {
         val store = store()
@@ -80,13 +81,17 @@ class LibraryRepositoryTest {
 
     @Test fun repository_reloadsOnSettingsChange() = runTest {
         val min = MutableStateFlow(30_000L)
-        val excluded = MutableStateFlow(emptySet<String>())
-        val source = FakeSource(listOf(t(1, dur = 40_000), t(2, dur = 100_000, folder = "/sdcard/Skip")))
-        val repo = repo(source, store(), excluded, min)
-        assertThat(repo.tracks.value.map { it.id }).containsExactly(1L, 2L)
+        val folders = MutableStateFlow(emptySet<String>())
+        val hidden = MutableStateFlow(emptySet<String>())
+        val two = t(2, dur = 100_000, folder = "/sdcard/Keep")
+        val source = FakeSource(listOf(t(1, dur = 40_000, folder = "/sdcard/Other"), two, t(3, dur = 100_000, folder = "/sdcard/Other")))
+        val repo = repo(source, store(), folders, min, hidden = hidden)
+        assertThat(repo.tracks.value.map { it.id }).containsExactly(1L, 2L, 3L)
         min.value = 60_000L
+        assertThat(repo.tracks.value.map { it.id }).containsExactly(2L, 3L)
+        folders.value = setOf("/sdcard/Keep")
         assertThat(repo.tracks.value.map { it.id }).containsExactly(2L)
-        excluded.value = setOf("/sdcard/Skip")
+        hidden.value = setOf(two.path)
         assertThat(repo.tracks.value).isEmpty()
     }
 

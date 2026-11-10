@@ -80,6 +80,13 @@ DRAWN = {
     'Add.svg': f'<path {S} d="M12 5v14M5 12h14"/>',
     'Import.svg': f'<path {S} d="M4 14.5V17a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2.5"/><path {S} d="M12 4v10.5M7.8 10.5l4.2 4.2 4.2-4.2"/>',
     'Export.svg': f'<path {S} d="M4 14.5V17a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2.5"/><path {S} d="M12 14.5V4M7.8 8.2L12 4l4.2 4.2"/>',
+    'Delete.svg': f'<path {S} d="M4 7h16M9.5 7V5.5A1.5 1.5 0 0 1 11 4h2a1.5 1.5 0 0 1 1.5 1.5V7"/>'
+                  f'<path {S} d="M6 7l1 11.2A2 2 0 0 0 9 20h6a2 2 0 0 0 2-1.8L18 7M10 11v5M14 11v5"/>',
+    'Hide.svg': f'<path {S} d="M2.5 12C4.5 8.2 8 6 12 6s7.5 2.2 9.5 6c-2 3.8-5.5 6-9.5 6s-7.5-2.2-9.5-6z"/>'
+                f'<circle {S} cx="12" cy="12" r="2.8"/><path {S} d="M4 4l16 16"/>',
+    # A microphone, as most players use for lyrics.
+    'Lyrics.svg': f'<rect {S} x="9" y="3" width="6" height="10.5" rx="3"/>'
+                  f'<path {S} d="M5.8 11a6.2 6.2 0 0 0 12.4 0M12 17.2V20M9 20h6"/>',
     'MusicNote.svg': f'<path {S} d="M14 17.5V4.5l5 1.8"/><ellipse {F} cx="10.6" cy="17.6" rx="3.4" ry="3" transform="rotate(-20 10.6 17.6)"/>',
 }
 

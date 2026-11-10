@@ -12,8 +12,12 @@ import androidx.compose.ui.unit.sp
 /** Brano's own color: used when no album is playing, or when album colors are off without system colors. */
 val LilacSeed = Color(0xFF7C5CFF)
 
-/** Soft asymmetric cover corners (the "Espressivo" look). */
-val CoverShape: Shape = RoundedCornerShape(topStart = 14.dp, topEnd = 30.dp, bottomEnd = 14.dp, bottomStart = 30.dp)
+/**
+ * Album art: a soft square with equal rounded corners, Apple Music style. Proportional (10% of the
+ * side), so small list covers and big header covers look alike. Equal corners also clip faster
+ * than mixed ones.
+ */
+val CoverShape: Shape = RoundedCornerShape(percent = 10)
 
 val PillShape: Shape = RoundedCornerShape(50)
 

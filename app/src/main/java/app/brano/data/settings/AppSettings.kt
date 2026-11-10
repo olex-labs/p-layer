@@ -11,4 +11,6 @@ data class AppSettings(
     val minDurationMs: Long = 30_000,
     val trackSort: TrackSort = TrackSort.TITLE,
     val spinDisc: Boolean = true,
+    /** LRCLIB lookup for tracks without local lyrics; the only use of the network. */
+    val onlineLyrics: Boolean = false,
 )

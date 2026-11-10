@@ -56,6 +56,13 @@ object AppIcons {
             fill("M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59 7.11 5.7a1 1 0 0 0-1.41 1.41L10.59 12l-4.89 4.89a1 1 0 1 0 1.41 1.41L12 13.41l4.89 4.89a1 1 0 0 0 1.41-1.41L13.41 12l4.89-4.89a1 1 0 0 0 0-1.4z"),
         )
     }
+    val Delete: ImageVector by lazy {
+        icon(
+            "Delete",
+            line("M4 7h16M9.5 7V5.5A1.5 1.5 0 0 1 11 4h2a1.5 1.5 0 0 1 1.5 1.5V7", 2f),
+            line("M6 7l1 11.2A2 2 0 0 0 9 20h6a2 2 0 0 0 2-1.8L18 7M10 11v5M14 11v5", 2f),
+        )
+    }
     val DragHandle: ImageVector by lazy {
         icon(
             "DragHandle",
@@ -87,6 +94,14 @@ object AppIcons {
             line("M3 8a3 3 0 0 1 3-3h3.2a2 2 0 0 1 1.5.7L12 7.2h6a3 3 0 0 1 3 3V17a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z", 2f),
         )
     }
+    val Hide: ImageVector by lazy {
+        icon(
+            "Hide",
+            line("M2.5 12C4.5 8.2 8 6 12 6s7.5 2.2 9.5 6c-2 3.8-5.5 6-9.5 6s-7.5-2.2-9.5-6z", 2f),
+            line("M9.2 12a2.8 2.8 0 1 0 5.6 0a2.8 2.8 0 1 0 -5.6 0z", 2f),
+            line("M4 4l16 16", 2f),
+        )
+    }
     val Import: ImageVector by lazy {
         icon(
             "Import",
@@ -107,6 +122,13 @@ object AppIcons {
             line("M7 3.5h10.5A3.5 3.5 0 0 1 21 7v10.5", 2f),
             line("M6.8 14a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0 -6.4 0z", 2f),
             fill("M9 14a1 1 0 1 0 2 0a1 1 0 1 0 -2 0z"),
+        )
+    }
+    val Lyrics: ImageVector by lazy {
+        icon(
+            "Lyrics",
+            line("M12 3h0a3 3 0 0 1 3 3v4.5a3 3 0 0 1 -3 3h-0a3 3 0 0 1 -3 -3v-4.5a3 3 0 0 1 3 -3z", 2f),
+            line("M5.8 11a6.2 6.2 0 0 0 12.4 0M12 17.2V20M9 20h6", 2f),
         )
     }
     val MoreVert: ImageVector by lazy {
@@ -235,7 +257,7 @@ object AppIcons {
     }
 
     /** Every icon, for tests. */
-    val all: List<ImageVector> get() = listOf(Add, Album, Artist, Back, ChevronDown, Close, DragHandle, Export, Favorite, FavoriteBorder, Folder, Import, Info, Library, MoreVert, MusicNote, Pause, Play, Playlist, PlaylistAdd, Queue, Repeat, RepeatOn, RepeatOne, Search, Settings, Shuffle, ShuffleOn, SkipNext, SkipPrevious, SleepTimer, Sort)
+    val all: List<ImageVector> get() = listOf(Add, Album, Artist, Back, ChevronDown, Close, Delete, DragHandle, Export, Favorite, FavoriteBorder, Folder, Hide, Import, Info, Library, Lyrics, MoreVert, MusicNote, Pause, Play, Playlist, PlaylistAdd, Queue, Repeat, RepeatOn, RepeatOne, Search, Settings, Shuffle, ShuffleOn, SkipNext, SkipPrevious, SleepTimer, Sort)
 }
 
 private class Part(val d: String, val stroke: Float, val evenOdd: Boolean)

@@ -78,6 +78,17 @@ fun TrackActionsSheet(
                 if (single != null) {
                     SheetAction(AppIcons.Info, R.string.action_file_info) { showInfo = true }
                 }
+                SheetAction(AppIcons.Hide, R.string.action_hide) {
+                    viewModel.hide(tracks)
+                    onDismiss()
+                }
+                if (viewModel.canDelete) {
+                    SheetAction(AppIcons.Delete, R.string.action_delete) {
+                        // The confirmation is shown by the app shell, so closing the sheet now is safe.
+                        viewModel.delete(tracks)
+                        onDismiss()
+                    }
+                }
             }
         }
     }

@@ -46,7 +46,16 @@ data class FavoriteEntity(
     val addedAt: Long,
 )
 
-@Entity(tableName = "excluded_folders")
-data class ExcludedFolderEntity(
+/** A folder the library reads from; [treeUri] holds the persisted read grant (used for .lrc files). */
+@Entity(tableName = "music_folders")
+data class MusicFolderEntity(
     @PrimaryKey val path: String,
+    val treeUri: String,
+)
+
+/** A track hidden from the library by its path (ids change when MediaStore re-indexes a file). */
+@Entity(tableName = "hidden_tracks")
+data class HiddenTrackEntity(
+    @PrimaryKey val path: String,
+    val hiddenAt: Long,
 )

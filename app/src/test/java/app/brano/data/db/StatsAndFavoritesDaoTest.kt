@@ -54,13 +54,4 @@ class StatsAndFavoritesDaoTest {
         assertThat(s.lastPlayedAt).isEqualTo(20)
     }
 
-    @Test fun excludedFolders_addRemoveObserve() = runTest {
-        val dao = db.excludedFolderDao()
-        dao.add("/x")
-        dao.add("/x")
-        dao.add("/y")
-        assertThat(dao.observe().first()).containsExactly("/x", "/y")
-        dao.remove("/x")
-        assertThat(dao.observe().first()).containsExactly("/y")
-    }
 }

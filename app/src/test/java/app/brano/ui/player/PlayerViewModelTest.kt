@@ -12,6 +12,10 @@ import app.brano.playback.PlayerUiState
 import app.brano.ui.theme.ArtworkSeedLoader
 import app.brano.data.settings.AppSettings
 import app.brano.data.settings.SettingsRepository
+import app.brano.lyrics.LyricLine
+import app.brano.lyrics.Lyrics
+import app.brano.lyrics.LyricsRepository
+import app.brano.lyrics.LyricsSource
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -40,6 +44,7 @@ class PlayerViewModelTest {
     private val seeds = mockk<ArtworkSeedLoader>()
     private val appSettings = MutableStateFlow(AppSettings())
     private val settingsRepo = mockk<SettingsRepository> { every { settings } returns appSettings }
+    private val lyricsRepo = mockk<LyricsRepository>()
     private val favs = MutableStateFlow<List<FavoriteEntity>>(emptyList())
 
     @Before fun setUp() {
@@ -59,7 +64,7 @@ class PlayerViewModelTest {
 
     @After fun tearDown() = Dispatchers.resetMain()
 
-    private fun vm() = PlayerViewModel(player, favorites, playlists, seeds, settingsRepo) { 5L }
+    private fun vm() = PlayerViewModel(player, favorites, playlists, seeds, settingsRepo, lyricsRepo) { 5L }
 
     @Test fun toggleFavorite_updatesIsFavoriteForCurrentTrack() = runTest(UnconfinedTestDispatcher()) {
         val vm = vm()
@@ -128,5 +133,27 @@ class PlayerViewModelTest {
         // Reopening the player must not fade from lilac: the album seed is already known.
         every { seeds.cachedSeed(1L) } returns Color.Red
         assertThat(vm().seedColor.value).isEqualTo(Color.Red)
+    }
+
+    @Test fun lyrics_hiddenUntilToggled_thenLoadedForTheCurrentTrack() = runTest(UnconfinedTestDispatcher()) {
+        val lyrics = Lyrics(listOf(LyricLine(1_000, "Ciao")), synced = true, source = LyricsSource.FILE)
+        coEvery { lyricsRepo.load(queue[0]) } returns lyrics
+        val vm = vm()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.lyrics.collect {} }
+        assertThat(vm.lyrics.value).isEqualTo(LyricsState.Hidden)
+        vm.toggleLyrics()
+        assertThat(vm.lyrics.value).isEqualTo(LyricsState.Shown(lyrics))
+        assertThat(vm.lyricsVisible.value).isTrue()
+        io.mockk.verify { player.fastPosition = true }
+        vm.toggleLyrics()
+        assertThat(vm.lyrics.value).isEqualTo(LyricsState.Hidden)
+    }
+
+    @Test fun lyrics_noneWhenNothingFound() = runTest(UnconfinedTestDispatcher()) {
+        coEvery { lyricsRepo.load(any()) } returns null
+        val vm = vm()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.lyrics.collect {} }
+        vm.toggleLyrics()
+        assertThat(vm.lyrics.value).isEqualTo(LyricsState.None)
     }
 }

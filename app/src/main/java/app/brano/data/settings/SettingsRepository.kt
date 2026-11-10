@@ -21,6 +21,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             prefs[MIN_DURATION] = new.minDurationMs
             prefs[SORT] = new.trackSort.name
             prefs[SPIN_DISC] = new.spinDisc
+            prefs[ONLINE_LYRICS] = new.onlineLyrics
         }
     }
 
@@ -33,6 +34,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             minDurationMs = this[MIN_DURATION] ?: d.minDurationMs,
             trackSort = enumOrDefault(this[SORT], d.trackSort),
             spinDisc = this[SPIN_DISC] ?: d.spinDisc,
+            onlineLyrics = this[ONLINE_LYRICS] ?: d.onlineLyrics,
         )
     }
 
@@ -46,5 +48,6 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val MIN_DURATION = longPreferencesKey("min_duration_ms")
         val SORT = stringPreferencesKey("track_sort")
         val SPIN_DISC = booleanPreferencesKey("spin_disc")
+        val ONLINE_LYRICS = booleanPreferencesKey("online_lyrics")
     }
 }
