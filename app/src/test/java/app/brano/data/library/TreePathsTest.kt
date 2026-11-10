@@ -22,4 +22,8 @@ class TreePathsTest {
         assertThat(treeDocIdToPath("home:Docs")).isNull()
         assertThat(treeDocIdToPath("")).isNull()
     }
+
+    @Test fun secondaryUserOrWorkProfile_usesTheirOwnRoot() {
+        assertThat(treeDocIdToPath("primary:Music", primaryRoot = "/storage/emulated/10")).isEqualTo("/storage/emulated/10/Music")
+    }
 }

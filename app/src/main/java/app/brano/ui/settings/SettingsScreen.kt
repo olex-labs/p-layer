@@ -1,6 +1,7 @@
 package app.brano.ui.settings
 
 import androidx.annotation.StringRes
+import android.os.Environment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.ListItemDefaults
 import app.brano.data.library.treeDocIdToPath
@@ -76,7 +77,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     // The system folder picker: the grant it gives is kept, so Brano can later read .lrc files there.
     val pickFolder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        val path = runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()?.let(::treeDocIdToPath)
+        val path = runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
+            ?.let { treeDocIdToPath(it, Environment.getExternalStorageDirectory().path) }
         if (path == null) {
             Toast.makeText(context, unsupported, Toast.LENGTH_LONG).show()
         } else {

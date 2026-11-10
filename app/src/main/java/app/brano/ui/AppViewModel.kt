@@ -1,6 +1,7 @@
 package app.brano.ui
 
 import androidx.compose.ui.graphics.Color
+import app.brano.playback.TrackDeleter
 import app.brano.data.db.HiddenTrackDao
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,6 +35,7 @@ class AppViewModel @Inject constructor(
     private val libraryRepository: LibraryRepository,
     private val playlistDao: PlaylistDao,
     private val hiddenDao: HiddenTrackDao,
+    private val deleter: TrackDeleter,
     private val seedLoader: ArtworkSeedLoader,
 ) : ViewModel() {
 
@@ -69,11 +71,15 @@ class AppViewModel @Inject constructor(
         viewModelScope.launch { hiddenDao.hide(tracks.map { it.path }, System.currentTimeMillis()) }
     }
 
-    /** After the system confirmed deleting [tracks]: out of the queue, and the library re-read. */
-    fun onDeleted(tracks: List<Track>) {
-        playerController.removeTracksFromQueue(tracks.mapTo(HashSet()) { it.id })
-        viewModelScope.launch { libraryRepository.refresh() }
-    }
+    val canDelete: Boolean get() = deleter.supported
+
+    /** Starts deleting [tracks]' files; the system asks for confirmation (see deleteRequests). */
+    fun delete(tracks: List<Track>) = deleter.delete(tracks)
+
+    /** Confirmations to show, collected once by the app shell. */
+    val deleteRequests = deleter.requests
+
+    fun onDeleteResult(ok: Boolean) = deleter.onResult(ok)
 
     /** False for a queued file that is no longer in the library (its album and artist pages are gone). */
     fun isInLibrary(track: Track): Boolean = libraryRepository.trackById(track.id) != null

@@ -1,6 +1,8 @@
 package app.brano.ui.navigation
 
 import android.Manifest
+import androidx.activity.result.IntentSenderRequest
+import android.app.Activity
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.MaterialTheme
 import android.os.Build
@@ -94,6 +96,14 @@ private fun BranoShell(viewModel: AppViewModel) {
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(viewModel) { viewModel.errors.collect { snackbar.showSnackbar(it) } }
+    // System confirmations for deleting files. Shown from here, always on screen, so the answer
+    // still arrives after the menu that asked has closed (and, by the result registry, after rotation).
+    val deleteConfirm = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+        viewModel.onDeleteResult(it.resultCode == Activity.RESULT_OK)
+    }
+    LaunchedEffect(viewModel) {
+        viewModel.deleteRequests.collect { deleteConfirm.launch(IntentSenderRequest.Builder(it).build()) }
+    }
     LaunchedEffect(player.isPlaying) {
         if (player.isPlaying && !notificationsAsked && Build.VERSION.SDK_INT >= 33) {
             notificationsAsked = true

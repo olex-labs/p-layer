@@ -28,6 +28,11 @@ object EmbeddedLyrics {
         null
     } catch (e: IllegalArgumentException) {
         null
+    } catch (e: IndexOutOfBoundsException) {
+        // Last line of defence: a malformed tag means "no lyrics", never a crash.
+        null
+    } catch (e: NegativeArraySizeException) {
+        null
     }
 
     // ---- ID3v2
@@ -42,21 +47,25 @@ object EmbeddedLyrics {
         input.readFully(tag)
         var pos = 0
         if (flags and 0x40 != 0) {
-            pos = if (version == 4) synchsafe(be32(tag, 0)) else be32(tag, 0) + 4
+            if (size < 4) return null
+            val ext = (be32(tag, 0).toLong() and 0xFFFFFFFFL).let { if (version == 4) synchsafe(it.toInt()).toLong() else it + 4 }
+            if (ext > size) return null
+            pos = ext.toInt()
         }
         var uslt: String? = null
         var sylt: String? = null
         while (pos + 10 <= size) {
             if (tag[pos] == 0.toByte()) break // padding
             val id = String(tag, pos, 4, Charsets.ISO_8859_1)
-            val frameSize = if (version == 4) synchsafe(be32(tag, pos + 4)) else be32(tag, pos + 4)
+            val frameSize = if (version == 4) synchsafe(be32(tag, pos + 4)).toLong() else be32(tag, pos + 4).toLong() and 0xFFFFFFFFL
             val start = pos + 10
             if (frameSize <= 0 || start + frameSize > size) break
+            val end = start + frameSize.toInt()
             when (id) {
-                "USLT" -> if (uslt == null) uslt = usltText(tag, start, start + frameSize)
-                "SYLT" -> if (sylt == null) sylt = syltAsLrc(tag, start, start + frameSize)
+                "USLT" -> if (uslt == null) uslt = usltText(tag, start, end)
+                "SYLT" -> if (sylt == null) sylt = syltAsLrc(tag, start, end)
             }
-            pos = start + frameSize
+            pos = end
         }
         return sylt?.takeIf { it.isNotBlank() } ?: uslt?.takeIf { it.isNotBlank() }
     }
@@ -162,18 +171,21 @@ object EmbeddedLyrics {
     private fun vorbisLyrics(b: ByteArray): String? {
         fun le32(at: Int) = (b[at].toInt() and 0xFF) or (b[at + 1].toInt() and 0xFF shl 8) or
             (b[at + 2].toInt() and 0xFF shl 16) or (b[at + 3].toInt() and 0xFF shl 24)
-        var pos = 4 + le32(0)
-        if (pos + 4 > b.size) return null
-        val count = le32(pos)
+        if (b.size < 8) return null
+        val vendor = le32(0).toLong() and 0xFFFFFFFFL
+        if (4 + vendor + 4 > b.size) return null
+        var pos = 4 + vendor.toInt()
+        val count = le32(pos).toLong() and 0xFFFFFFFFL
         pos += 4
         val found = HashMap<String, String>()
-        repeat(count) {
-            if (pos + 4 > b.size) return@repeat
-            val len = le32(pos)
+        var left = count
+        // Stops when the data runs out, whatever count claims.
+        while (left-- > 0 && pos + 4 <= b.size) {
+            val len = le32(pos).toLong() and 0xFFFFFFFFL
             pos += 4
-            if (len < 0 || pos + len > b.size) return@repeat
-            val entry = String(b, pos, len, Charset.forName("UTF-8"))
-            pos += len
+            if (pos + len > b.size) break
+            val entry = String(b, pos, len.toInt(), Charset.forName("UTF-8"))
+            pos += len.toInt()
             val key = entry.substringBefore('=', "").uppercase(java.util.Locale.ROOT)
             if (key == "LYRICS" || key == "UNSYNCEDLYRICS") found.putIfAbsent(key, entry.substringAfter('='))
         }

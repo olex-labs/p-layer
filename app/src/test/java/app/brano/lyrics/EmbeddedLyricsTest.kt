@@ -65,4 +65,30 @@ class EmbeddedLyricsTest {
         assertThat(EmbeddedLyrics.read(ByteArray(100) { it.toByte() }.inputStream())).isNull()
         assertThat(EmbeddedLyrics.read(id3(3, "TIT2" to byteArrayOf(0, 65)).inputStream())).isNull()
     }
+
+    /** Hostile or truncated tags must give null, never an exception. */
+    @Test fun hostileBytes_neverThrow() {
+        val cases = listOf(
+            // ID3 with the extended-header flag and a tag too small for it.
+            byteArrayOf(73, 68, 51, 3, 0, 0x40, 0, 0, 0, 2, 1, 2),
+            // v2.3 extended header size 0xFFFFFFF0.
+            byteArrayOf(73, 68, 51, 3, 0, 0x40, 0, 0, 0, 20) + byteArrayOf(-1, -1, -1, -16) + ByteArray(16),
+            // v2.3 frame size near Int.MAX_VALUE.
+            byteArrayOf(73, 68, 51, 3, 0, 0, 0, 0, 0, 20) + "USLT".toByteArray() + byteArrayOf(0x7F, -1, -1, -8, 0, 0) + ByteArray(10),
+            // FLAC Vorbis block shorter than 4 bytes.
+            "fLaC".toByteArray() + byteArrayOf((0x80 or 4).toByte(), 0, 0, 2, 1, 2),
+            // FLAC Vorbis block with a negative vendor length.
+            "fLaC".toByteArray() + byteArrayOf((0x80 or 4).toByte(), 0, 0, 8) + byteArrayOf(-1, -1, -1, -1, 0, 0, 0, 0),
+            // FLAC entry whose length overflows.
+            "fLaC".toByteArray() + byteArrayOf((0x80 or 4).toByte(), 0, 0, 12) + le32(0) + le32(1) + byteArrayOf(-1, -1, -1, 0x7F),
+        )
+        cases.forEach { bytes -> assertThat(EmbeddedLyrics.read(bytes.inputStream())).isNull() }
+    }
+
+    @Test fun hugeCommentCount_returnsQuickly() {
+        val bytes = "fLaC".toByteArray() + byteArrayOf((0x80 or 4).toByte(), 0, 0, 8) + le32(0) + le32(Int.MAX_VALUE)
+        val start = System.nanoTime()
+        assertThat(EmbeddedLyrics.read(bytes.inputStream())).isNull()
+        assertThat((System.nanoTime() - start) / 1_000_000).isLessThan(200L)
+    }
 }

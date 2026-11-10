@@ -22,9 +22,9 @@ class LyricsRepository(
     suspend fun load(track: Track): Lyrics? = withContext(Dispatchers.IO) {
         val cached = File(cacheDir, "${track.id}.lrc")
         if (cached.exists()) LyricsParser.parse(cached.readText(), LyricsSource.CACHE)?.let { return@withContext it }
-        runCatching { sidecar(track) }.getOrNull()
+        quietly { sidecar(track) }
             ?.let { LyricsParser.parse(it, LyricsSource.FILE) }?.let { return@withContext it }
-        runCatching { embedded(track) }.getOrNull()
+        quietly { embedded(track) }
             ?.let { LyricsParser.parse(it, LyricsSource.EMBEDDED) }?.let { return@withContext it }
         if (!onlineEnabled()) return@withContext null
 
@@ -45,6 +45,15 @@ class LyricsRepository(
             }
             LrclibClient.Result.Failed -> null
         }
+    }
+
+    /** A failing source counts as "nothing there"; cancellation (track changed) still stops the load. */
+    private suspend fun quietly(block: suspend () -> String?): String? = try {
+        block()
+    } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        null
     }
 
     private companion object {
