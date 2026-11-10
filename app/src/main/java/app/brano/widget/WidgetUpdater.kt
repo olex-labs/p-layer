@@ -45,8 +45,12 @@ class WidgetUpdater(
             try {
                 val album = s.albumId
                 if (album != shownAlbum) {
-                    shownCover = album?.let { cover(it) }
-                    shownBackground = album?.let { background(it) } ?: DEFAULT_WIDGET_BG
+                    // Load first, then switch all three together: a cancelled load must never leave
+                    // one album's cover paired with another album's id.
+                    val newCover = album?.let { cover(it) }
+                    val newBackground = album?.let { background(it) } ?: DEFAULT_WIDGET_BG
+                    shownCover = newCover
+                    shownBackground = newBackground
                     shownAlbum = album
                 }
                 push(s, shownCover, shownBackground)

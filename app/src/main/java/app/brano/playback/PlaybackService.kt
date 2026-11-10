@@ -22,6 +22,7 @@ import app.brano.data.library.LibraryRepository
 import app.brano.data.library.ref
 import app.brano.data.settings.QueueState
 import app.brano.data.settings.QueueStateStore
+import app.brano.data.settings.onlyExisting
 import app.brano.data.settings.restore
 import app.brano.di.ApplicationScope
 import app.brano.ui.theme.ArtworkSeedLoader
@@ -31,6 +32,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -42,6 +44,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 @AndroidEntryPoint
@@ -150,7 +153,10 @@ class PlaybackService : MediaSessionService() {
         withTimeoutOrNull(RESTORE_TIMEOUT_MS) { libraryRepository.tracks.first { it.isNotEmpty() } }
             ?: return
         if (player.mediaItemCount > 0) return // a controller already started something
-        val restored = saved.restore(libraryRepository::trackById) ?: return
+        val restored = withContext(Dispatchers.IO) {
+            saved.restore(onlyExisting(libraryRepository::trackById) { File(it).exists() })
+        } ?: return
+        if (player.mediaItemCount > 0) return // started while checking the files
         player.repeatMode = saved.repeatMode
         player.setMediaItems(
             restored.tracks.map(MediaItemMapper::toMediaItem),
@@ -291,18 +297,8 @@ class PlaybackService : MediaSessionService() {
             val result = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
             scope.launch {
                 restoreJob.join()
-                if (player.mediaItemCount == 0) {
-                    result.set(MediaSession.MediaItemsWithStartPosition(emptyList(), 0, 0))
-                } else {
-                    shufflingPlayer.keepOrderOnce()
-                    result.set(
-                        MediaSession.MediaItemsWithStartPosition(
-                            List(player.mediaItemCount) { player.getMediaItemAt(it) },
-                            player.currentMediaItemIndex,
-                            player.currentPosition,
-                        ),
-                    )
-                }
+                if (player.mediaItemCount > 0) shufflingPlayer.keepOrderOnce()
+                result.set(PlaybackResumption.of(player))
             }
             return result
         }

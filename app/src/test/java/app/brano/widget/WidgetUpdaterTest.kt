@@ -69,7 +69,25 @@ class WidgetUpdaterTest {
         assertThat(pushed.map { it.second }).doesNotContain(bitmapA)
     }
 
-    @Test fun coverNull_pushesWithNullBitmap() = runTest(StandardTestDispatcher()) {
+    @Test fun quickBackAndForth_neverMixesCoverAndTrack() = runTest(StandardTestDispatcher()) {
+        // X shown; skip to B whose colour is slow; back to X before B finishes: X keeps its own cover.
+        val slowColour = CompletableDeferred<Int>()
+        val u = WidgetUpdater(
+            scope = backgroundScope,
+            widgetIds = { ids },
+            push = { s, bmp, bg -> pushed += Triple(s, bmp, bg) },
+            save = {},
+            cover = { if (it == 1L) bitmapA else bitmapB },
+            background = { if (it == 2L) slowColour.await() else 42 },
+            log = {},
+        )
+        u.update(a); runCurrent()
+        u.update(b); runCurrent()
+        u.update(a.copy(isPlaying = false)); runCurrent()
+        assertThat(pushed.last()).isEqualTo(Triple(a.copy(isPlaying = false), bitmapA, 42))
+    }
+
+    @Test fun coverNull_pushesWithNullBitmap()= runTest(StandardTestDispatcher()) {
         val u = updater(cover = { null })
         u.update(a); runCurrent()
         assertThat(pushed).containsExactly(Triple(a, null, 42))

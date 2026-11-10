@@ -62,6 +62,10 @@ class QueueStateStore(private val store: DataStore<Preferences>) {
  * Drops ids no longer in the library. If the current track is gone, the index moves to the next
  * available track after it in the original order (else the last one before it) with position 0.
  */
+/** [lookup] that also drops tracks whose file is gone (the library snapshot can be older than the disk). */
+fun onlyExisting(lookup: (Long) -> Track?, exists: (String) -> Boolean): (Long) -> Track? =
+    { id -> lookup(id)?.takeIf { exists(it.path) } }
+
 fun QueueState.restore(lookup: (Long) -> Track?): RestoredQueue? {
     val resolved = ids.map { lookup(it) }
     val tracks = resolved.filterNotNull()
