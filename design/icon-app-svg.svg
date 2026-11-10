@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <g id="foreground-symbol">
+    <!-- Vinile Principale (Lilla) -->
+    <circle cx="512" cy="512" r="320" fill="#7C5CFF" />
+    
+    <!-- Scanalatura dinamica (Second tone) -->
+    <circle cx="512" cy="512" r="230" fill="none" stroke="#B9A6FF" stroke-width="44" stroke-dasharray="600 400" stroke-linecap="round" transform="rotate(135 512 512)" />
+    
+    <!-- Etichetta Centrale (Near-black violet per creare l'intaglio dell'etichetta) -->
+    <circle cx="512" cy="512" r="110" fill="#14101F" />
+    
+    <!-- Nota Musicale Bianca al centro -->
+    <circle cx="472" cy="542" r="28" fill="#FFFFFF" />
+    <path d="M 486 542 V 450 C 486 443 492 437 499 437 H 544 C 551 437 557 443 557 450 V 465 C 557 472 551 478 544 478 H 500 V 542 Z" fill="#FFFFFF" />
+  </g>
+</svg>

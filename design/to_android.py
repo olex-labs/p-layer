@@ -1,4 +1,4 @@
-"""Turns design/icons/*.svg into app/.../ui/icons/AppIcons.kt (Compose ImageVectors, built lazily)
+﻿"""Turns design/icons/*.svg into app/.../ui/icons/AppIcons.kt (Compose ImageVectors, built lazily)
 and design/launcher/*.svg into Android vector drawables plus the adaptive launcher icon.
 
 Run from the project root after editing any SVG:  python -I design/to_android.py
@@ -69,6 +69,7 @@ def shapes(svg_path):
             'width': float(a.get('stroke-width', 1)),
             'evenodd': a.get('fill-rule') == 'evenodd',
             'stroke_opacity': float(a.get('stroke-opacity', 1)),
+            'round': a.get('stroke-linecap') == 'round',
         }
 
 
@@ -163,6 +164,8 @@ def vector_drawable(svg_name, size):
         if s['stroke']:
             attrs += [f'android:strokeColor="{argb(s["stroke"], s["stroke_opacity"])}"',
                       f'android:strokeWidth="{n(s["width"])}"']
+            if s.get('round'):
+                attrs.append('android:strokeLineCap="round"')
         elif s['fill'] and s['fill'].startswith('url('):
             attrs.append('android:fillColor="@android:color/transparent"')
         elif s['fill']:
@@ -184,8 +187,8 @@ BACKGROUND = '''<?xml version="1.0" encoding="utf-8"?>
     android:viewportWidth="108" android:viewportHeight="108">
     <path android:pathData="M0 0h108v108h-108z">
         <aapt:attr name="android:fillColor">
-            <gradient android:type="radial" android:centerX="54" android:centerY="30"
-                android:gradientRadius="90" android:startColor="#FF7C5CFF" android:endColor="#FF7C2D12" />
+            <gradient android:type="radial" android:centerX="54" android:centerY="54"
+                android:gradientRadius="64" android:startColor="#FF2E2266" android:endColor="#FF14101F" />
         </aapt:attr>
     </path>
 </vector>

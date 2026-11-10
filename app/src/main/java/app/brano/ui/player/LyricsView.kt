@@ -57,7 +57,9 @@ fun LyricsView(
         LyricsState.Loading -> Box(modifier, contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = LocalContentColor.current)
         }
-        LyricsState.None, LyricsState.Hidden -> Box(modifier, contentAlignment = Alignment.Center) {
+        // Hidden only lasts the frame before loading starts: blank, so "no lyrics" never flashes.
+        LyricsState.Hidden -> Box(modifier)
+        LyricsState.None -> Box(modifier, contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.lyrics_none), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
                 if (!onlineEnabled) {

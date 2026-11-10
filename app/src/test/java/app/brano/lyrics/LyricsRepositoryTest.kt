@@ -53,7 +53,13 @@ class LyricsRepositoryTest {
         calls.clear()
         val again = repo().load(track)!!
         assertThat(again.source).isEqualTo(LyricsSource.CACHE)
-        assertThat(calls).isEmpty()
+        assertThat(calls).doesNotContain("online")
+    }
+
+    @Test fun lrcAddedAfterADownload_winsOverTheCache() = runTest {
+        repo(online = LrclibClient.Result.Found("[00:02.00]rete")).load(track)
+        val l = repo(sidecar = "[00:01.00]mio").load(track)!!
+        assertThat(l.source).isEqualTo(LyricsSource.FILE)
     }
 
     @Test fun recentMiss_skipsOnline_thenRetriesAfterAWeek() = runTest {
