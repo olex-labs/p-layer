@@ -38,6 +38,17 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import android.content.Context
+import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
+import app.brano.data.settings.SettingsRepository
+import app.brano.playback.eq.EqPreset
+import app.brano.playback.eq.EqualizerController
+import app.brano.playback.rg.ReplayGainPolicy
+import app.brano.playback.rg.ReplayGainProcessor
+import app.brano.playback.rg.ReplayGainSink
+import app.brano.playback.rg.ReplayGainTags
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -48,6 +59,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 @AndroidEntryPoint
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class PlaybackService : MediaSessionService() {
 
     @Inject lateinit var libraryRepository: LibraryRepository
@@ -55,6 +67,18 @@ class PlaybackService : MediaSessionService() {
     @Inject lateinit var playStatsDao: PlayStatsDao
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
     @Inject lateinit var seeds: ArtworkSeedLoader
+    @Inject lateinit var settingsRepository: SettingsRepository
+
+    /** Equalizer preset on the player's audio session. */
+    private val eq = EqualizerController()
+    private var eqPreset = EqPreset.OFF
+
+    /** ReplayGain: scales the samples; 1 when off or the song has no tags. */
+    private val replayGain = ReplayGainProcessor()
+    @Volatile private var replayGainOn = true
+
+    /** Whole album in order: use album gain. Read by the sink on the playback thread. */
+    @Volatile private var albumMode = false
 
     /** Home screen widget; does nothing when no widget is placed. */
     private lateinit var widget: WidgetUpdater
@@ -94,6 +118,20 @@ class PlaybackService : MediaSessionService() {
             )
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
+            .setRenderersFactory(object : DefaultRenderersFactory(this) {
+                override fun buildAudioSink(
+                    context: Context,
+                    enableFloatOutput: Boolean,
+                    enableAudioTrackPlaybackParams: Boolean,
+                ): AudioSink = ReplayGainSink(
+                    DefaultAudioSink.Builder(context)
+                        .setEnableFloatOutput(enableFloatOutput)
+                        .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                        .setAudioProcessors(arrayOf(replayGain))
+                        .build(),
+                    replayGain,
+                ) { metadata -> gainFor(metadata) }
+            })
             .build()
         // Shuffle physically reorders the items (ShufflingPlayer), so the shuffle flag must not
         // reorder playback a second time: keep the timeline order in both modes.
@@ -109,6 +147,17 @@ class PlaybackService : MediaSessionService() {
         widget = WidgetUpdater.create(this, scope, seeds)
         WidgetUpdater.liveRefresh = { pushWidget(force = true) }
         player.addListener(playerListener)
+        eq.attach(player.audioSessionId)
+        scope.launch {
+            settingsRepository.settings.collect { s ->
+                if (s.eqPreset != eqPreset) {
+                    eqPreset = s.eqPreset
+                    eq.apply(eqPreset)
+                }
+                replayGainOn = s.replayGain
+                updateGain()
+            }
+        }
 
         val activityIntent = PendingIntent.getActivity(
             this, 0, Intent(this, MainActivity::class.java),
@@ -135,6 +184,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        eq.release()
         WidgetUpdater.liveRefresh = null
         saveState()
         player.removeListener(playerListener)
@@ -215,7 +265,33 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+    /** Gain for a song's metadata with the current switch and album mode; called by the sink per song. */
+    private fun gainFor(metadata: androidx.media3.common.Metadata?): Float {
+        val gain = if (!replayGainOn) 1f else ReplayGainPolicy.linearGain(ReplayGainTags.from(metadata), albumMode)
+        Log.d(TAG, "ReplayGain gain=%.3f album=%b".format(gain, albumMode))
+        return gain
+    }
+
+    /** Sets the ReplayGain multiplier for the current song: album gain for a whole album in order, else track gain. */
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+    private fun updateGain() {
+        val format = player.currentTracks.groups
+            .firstOrNull { it.type == C.TRACK_TYPE_AUDIO && it.isSelected }
+            ?.let { group -> (0 until group.length).firstOrNull { group.isTrackSelected(it) }?.let(group::getTrackFormat) }
+        val albumIds = List(player.mediaItemCount) { player.getMediaItemAt(it) }.map { MediaItemMapper.toTrackOrNull(it)?.albumId ?: -1L }
+        albumMode = ReplayGainPolicy.useAlbum(albumIds, shufflingPlayer.shuffleModeEnabled)
+        // The sink sets each song's gain at its first samples; here only a settings or mode change is applied,
+        // and only once the current song's metadata is known (never overwrite it with an empty one).
+        if (format != null) replayGain.gain = gainFor(format.metadata)
+    }
+
     private val playerListener = object : Player.Listener {
+        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) = updateGain()
+
+        override fun onAudioSessionIdChanged(audioSessionId: Int) {
+            eq.attach(audioSessionId)
+        }
+
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO ||
                 reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT
@@ -238,6 +314,7 @@ class PlaybackService : MediaSessionService() {
 
         override fun onTimelineChanged(timeline: Timeline, reason: Int) {
             if (!timeline.isEmpty) hadItems = true
+            updateGain()
         }
 
         override fun onPlayerError(error: PlaybackException) {

@@ -29,6 +29,8 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import app.brano.playback.eq.EqualizerController
+import app.brano.playback.eq.EqPreset
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -130,6 +132,28 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 headlineContent = { Text(stringResource(R.string.settings_online_lyrics)) },
                 supportingContent = { Text(stringResource(R.string.settings_online_lyrics_hint)) },
                 trailingContent = { Switch(checked = settings.onlineLyrics, onCheckedChange = viewModel::setOnlineLyrics) },
+            )
+            val eqUsable by EqualizerController.usable.collectAsStateWithLifecycle()
+            val eqAvailable = remember { EqualizerController.isAvailable() } && eqUsable
+            var showEq by rememberSaveable { mutableStateOf(false) }
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_eq)) },
+                supportingContent = {
+                    Text(stringResource(if (eqAvailable) settings.eqPreset.label() else R.string.eq_unavailable))
+                },
+                modifier = Modifier.clickable(enabled = eqAvailable) { showEq = true },
+            )
+            if (showEq) {
+                EqPresetDialog(
+                    current = settings.eqPreset,
+                    onPick = { viewModel.setEqPreset(it); showEq = false },
+                    onDismiss = { showEq = false },
+                )
+            }
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_replaygain)) },
+                supportingContent = { Text(stringResource(R.string.settings_replaygain_hint)) },
+                trailingContent = { Switch(checked = settings.replayGain, onCheckedChange = viewModel::setReplayGain) },
             )
             HorizontalDivider()
             Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -252,5 +276,42 @@ private fun HiddenTracksDialog(
         dismissButton = {
             if (hidden.isNotEmpty()) TextButton(onClick = onUnhideAll) { Text(stringResource(R.string.action_unhide_all)) }
         },
+    )
+}
+
+private fun EqPreset.label(): Int = when (this) {
+    EqPreset.OFF -> R.string.eq_off
+    EqPreset.BASS -> R.string.eq_bass
+    EqPreset.ROCK -> R.string.eq_rock
+    EqPreset.POP -> R.string.eq_pop
+    EqPreset.JAZZ -> R.string.eq_jazz
+    EqPreset.CLASSICAL -> R.string.eq_classical
+    EqPreset.VOCAL -> R.string.eq_vocal
+    EqPreset.ELECTRONIC -> R.string.eq_electronic
+    EqPreset.ACOUSTIC -> R.string.eq_acoustic
+    EqPreset.NIGHT -> R.string.eq_night
+}
+
+@Composable
+private fun EqPresetDialog(current: EqPreset, onPick: (EqPreset) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_eq)) },
+        text = {
+            Column(Modifier.selectableGroup().verticalScroll(rememberScrollState())) {
+                EqPreset.entries.forEach { p ->
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .selectable(selected = p == current, onClick = { onPick(p) }, role = Role.RadioButton)
+                            .padding(vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = p == current, onClick = null)
+                        Text(stringResource(p.label()), Modifier.padding(start = 16.dp))
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
     )
 }

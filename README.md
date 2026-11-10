@@ -45,6 +45,7 @@ P-layer plays the music already on your phone. It has no account, no ads and no 
 - Shuffle and repeat work the same from the app, headphones, the lock screen and the widget.
 - Your queue and position are saved and restored, so the app picks up where you left off.
 - Sleep timer, after a set time or at the end of the current song.
+- Equalizer presets, and volume normalisation from ReplayGain tags (album or song, chosen automatically).
 
 **Synced lyrics**
 - Reads `.lrc` files next to your songs, and lyrics embedded in MP3 (ID3 USLT/SYLT) and FLAC files.
@@ -105,7 +106,6 @@ The app makes a network request in one case only: you have turned on **Settings 
 ## Roadmap
 
 - [ ] Android Auto
-- [ ] Equalizer and ReplayGain
 - [ ] Crossfade
 - [ ] Larger widget sizes
 

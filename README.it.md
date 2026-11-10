@@ -34,6 +34,7 @@ P-layer riproduce la musica che hai già sul telefono. Non ha account, pubblicit
 - Shuffle e ripetizione uguali da app, cuffie, schermata di blocco e widget.
 - Ripresa della coda da dove eri rimasto.
 - Timer di spegnimento.
+- Equalizzatore a preset e volume uniforme dai tag ReplayGain (album o brano, scelto da solo).
 
 **Testi sincronizzati**
 - Da file `.lrc`, dai testi dentro MP3 e FLAC, e da LRCLIB solo se lo attivi.

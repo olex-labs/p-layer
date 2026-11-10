@@ -42,6 +42,8 @@ class SettingsViewModel @Inject constructor(
     fun setAmoled(b: Boolean) = update { it.copy(amoled = b) }
     fun setSpinDisc(b: Boolean) = update { it.copy(spinDisc = b) }
     fun setOnlineLyrics(b: Boolean) = update { it.copy(onlineLyrics = b) }
+    fun setEqPreset(p: app.brano.playback.eq.EqPreset) = update { it.copy(eqPreset = p) }
+    fun setReplayGain(b: Boolean) = update { it.copy(replayGain = b) }
     fun setDynamicColor(b: Boolean) = update { it.copy(dynamicColor = b) }
     /** [s] comes from the slider: rounded, since its steps land on values like 29.999998. */
     fun setMinDurationSec(s: Float) = update { it.copy(minDurationMs = s.roundToInt() * 1_000L) }

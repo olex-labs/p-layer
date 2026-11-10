@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import app.brano.playback.eq.EqPreset
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -22,6 +23,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             prefs[SORT] = new.trackSort.name
             prefs[SPIN_DISC] = new.spinDisc
             prefs[ONLINE_LYRICS] = new.onlineLyrics
+            prefs[EQ_PRESET] = new.eqPreset.name
+            prefs[REPLAY_GAIN] = new.replayGain
         }
     }
 
@@ -35,6 +38,8 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
             trackSort = enumOrDefault(this[SORT], d.trackSort),
             spinDisc = this[SPIN_DISC] ?: d.spinDisc,
             onlineLyrics = this[ONLINE_LYRICS] ?: d.onlineLyrics,
+            eqPreset = EqPreset.fromName(this[EQ_PRESET]),
+            replayGain = this[REPLAY_GAIN] ?: d.replayGain,
         )
     }
 
@@ -49,5 +54,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         val SORT = stringPreferencesKey("track_sort")
         val SPIN_DISC = booleanPreferencesKey("spin_disc")
         val ONLINE_LYRICS = booleanPreferencesKey("online_lyrics")
+        val EQ_PRESET = stringPreferencesKey("eq_preset")
+        val REPLAY_GAIN = booleanPreferencesKey("replay_gain")
     }
 }
