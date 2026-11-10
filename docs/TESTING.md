@@ -95,3 +95,15 @@ Verificato sull'emulatore:
 
 Da provare sul telefono:
 - [ ] Disinstallare Brano (vecchio ID) prima di installare P-layer: preferiti e playlist non vengono trasferiti, esportare le playlist in M3U prima.
+
+## v1.11 — equalizzatore e ReplayGain
+
+Verificato sull'emulatore (senza audio):
+- [x] MP3 con TXXX REPLAYGAIN_TRACK_GAIN=-6.00 dB: guadagno 0,501 nel log.
+- [x] Album intero in ordine: il log mostra album=true.
+- [x] Equalizzatore: scelta Rock, resta dopo il riavvio; l'effetto risulta attivo sulla sessione audio senza errori.
+
+Da provare sul telefono (con audio vero):
+- [ ] Ogni preset si sente diverso e Spento torna al suono originale.
+- [ ] Brani con tag ReplayGain molto diversi suonano allo stesso volume; nessuna distorsione sui brani alzati.
+- [ ] Telefoni con equalizzatore proprio (Samsung, Dolby): nessun conflitto.
